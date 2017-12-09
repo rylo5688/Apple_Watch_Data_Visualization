@@ -1,0 +1,78 @@
+h1{
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: auto;
+  width: 40%;
+  padding:10px;
+  text-align: center;
+}
+
+#title{
+  position: fixed;
+  left: 50%;
+  margin-left: -200px;
+}
+
+.triangle-back {
+	width: 0;
+  height: 0;
+	border-top: 0px solid #555;
+  border-left: 50px solid #555;
+	border-bottom: 50px solid transparent;
+  float: left;
+  position: fixed;
+}
+
+.data{
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: auto;
+  width: window.width;
+  padding:15px;
+  text-align: center;
+}
+
+.x-axis {
+  font: 12px sans-serif;
+}
+.x-axis path,
+.x-axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.y-axis {
+  font: 12px sans-serif;
+}
+.y-axis path,
+.y-axis line {
+  position: fixed;
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.box {
+  font: 10px sans-serif;
+}
+
+.box line,
+.box rect,
+.box circle {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.box .center {
+  stroke-dasharray: 3,3;
+}
+
+.box .outlier {
+  fill: none;
+  stroke: #ccc;
+}
+
+div.triangle-back:hover{
+  border-top: 0px solid #7FFFD4;
+  border-left: 50px solid #7FFFD4;
+}
