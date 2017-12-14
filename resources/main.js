@@ -1,4 +1,5 @@
-//CLEAN UP
+//Goal for next time: For all domains other than time we want to be able to scroll throughout the whole scope of the data
+
 
 //GLOBALS
 var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
@@ -12,8 +13,27 @@ var margin = {top: 30, right: 30, bottom: 70, left: 30},
 width = window.innerWidth*.95 - margin.left - margin.right,
 height = window.innerHeight * 0.7;
 
+var min = Infinity,
+max = -Infinity;
+
+var domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
+var domainTitle = ['Year', 'Month', 'Day', 'Time'];
+
+var chart = d3.box()
+  .whiskers(iqr(1.5))
+  .width(width)
+  .height(height)
+  .domain([min,max]);
+
+var chartScatter = d3.scatter()
+  .width(width)
+  .height(height)
+  .domain([min, max]);
+
+var index = 0;
+
 //returns an array of ['year', 'month', 'day']
-function parseDate(date){
+function ParseDate(date){
   var mmddyy = new Array();
   var i = 1;
   var index = date.indexOf('/');
@@ -29,23 +49,53 @@ function parseDate(date){
   return mmddyy;
 }
 
-var min = Infinity,
-max = -Infinity;
+function CreateDomain(data){
+  var arr = [];
+  switch (domainType){
+    case 0: //need to make this case
+      var yearStart = parseInt(data[0][0]);
+      var yearEnd = parseInt(data[data.length-1][0]);
 
-var chart = d3.box()
-.whiskers(iqr(1.5))
-.width(width)
-.height(height)
-.domain([min,max]);
+      for (var i = yearStart; i <= yearEnd; i++){
+        arr.push(i.toString());
+      }
 
-var chartScatter = d3.scatter()
-  .width(width)
-  .height(height)
-  .domain([min, max]);
+      return d3.scale.ordinal()
+        .domain(arr)
+        .rangeBands([0 , width], .93);
 
-var index = 0;
+    case 1: //month
+      var date = ParseDate(data[0][0]);
+      console.log(date);
+      for (var i = 1; i <= 12; i++){
+        arr.push(i.toString() + "/" + date[2]); //NOTE: Need to fix ParseDate to accept other date formats
+      }
 
-function CreatePlot(data, xAxisTitle, type){
+      return d3.scale.ordinal()
+        .domain(arr)
+        .rangeBands([0 , width], .93);
+
+    case 2: //days
+      var date = ParseDate(data[0][0]);
+      var totalDays = days[date[1]-1]
+
+      for (var i = 1; i <= totalDays; i++){
+        arr.push(date[1] + "/" + i.toString() + "/" + date[0]);
+      }
+
+      return d3.scale.ordinal()
+        .domain(arr)
+        .rangeBands([0 , width], .93);
+
+    case 3: //time
+      return d3.scale.ordinal()
+                .domain(time)
+                .rangeBands([0 , width], .4);
+  };
+}
+
+
+function CreatePlot(data, type){
   //rescaling
   var extendScreen = data.length >= 12 ? (data.length-12) * 80 : 0;
   d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
@@ -71,9 +121,8 @@ function CreatePlot(data, xAxisTitle, type){
   }
 
   // the x-axis
-  var x = d3.scale.ordinal()
-    .domain( data.map(function(d) { return d[0] } ))
-    .rangeBands([0 , width], .93);
+  var x = CreateDomain(data);
+
   //console.log(width)
   var xAxis = d3.svg.axis()
     .scale(x)
@@ -98,13 +147,12 @@ function CreatePlot(data, xAxisTitle, type){
   }
   else if (type == 's'){ //draw the scatter plots
     //readjusting the x-axis
-    x = d3.scale.ordinal()
-      .domain(time)
-      .rangeBands([0 , width], .4);
+    x = CreateDomain(data);
     //console.log(width)
     xAxis = d3.svg.axis()
       .scale(x)
       .orient("bottom");
+
     var tickWidth = x("12am");
     var meridiem = "am"; //for 12 hr clock cycle
     var lastTime = "";
@@ -119,11 +167,12 @@ function CreatePlot(data, xAxisTitle, type){
       arr = [element];
       timeString = arr[0][0];
       hour = timeString.substring(0, timeString.indexOf(':'));
-      lastTime = hour;
-      
+
       if (parseInt(lastTime) > parseInt(hour)){ //passed the 12 hour mark
         meridiem = "pm";
       }
+
+      lastTime = hour;
 
       if (hour == "0"){
         hour = "12"
@@ -144,7 +193,7 @@ function CreatePlot(data, xAxisTitle, type){
     });
   }
 
-  // draw y axis
+  //draw y axis
   svg.append("g")
         .attr("class", "y-axis")
         .call(yAxis)
@@ -167,7 +216,7 @@ function CreatePlot(data, xAxisTitle, type){
         .attr("dy", ".71em")
         .style("text-anchor", "middle")
         .style("font-size", "16px")
-        .text(xAxisTitle);
+        .text(domainTitle[domainType]);
 }
 
 function GoToHome(){
@@ -187,7 +236,7 @@ function GoToHome(){
       time = x.time,
       heartRate = Math.floor(x.heart_rate);
 
-      dateArr = parseDate(date);
+      dateArr = ParseDate(date);
       year = '20' + dateArr[0].toString();
       month = dateArr[1].toString();
       day = dateArr[2].toString();
@@ -214,7 +263,8 @@ function GoToHome(){
 
     chart.domain([min, max]);
 
-    CreatePlot(data, "Year", 'b');
+    domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
+    CreatePlot(data, 'b');
   });
 }
 
@@ -229,20 +279,18 @@ function Update(d){
     var day;
     var index = 0;
     var filterIndex;
-    var xAxisTitle;
 
     if (d['date'].match(/\//g || []) == null){ //year
+      domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
       filterIndex = 0;
-      xAxisTitle = "Month"
     }
     else if (d['date'].match(/\//g || []).length == 1){ //month, year
+      domainType = 1; //0 = year, 1 = month, 2 = day, 3 = time
       filterIndex = 1;
-      xAxisTitle = "Day"
     }
     else if (d['date'].match(/\//g || []).length == 2){ //month, day, year
+      domainType = 2; //0 = year, 1 = month, 2 = day, 3 = time
       filterIndex = 2;
-      xAxisTitle = "Time"
-      //return;
     }
 
     d3.selectAll("svg").remove(); //delete current box plots
@@ -254,21 +302,24 @@ function Update(d){
       time = x.time,
       heartRate = Math.floor(x.heart_rate);
 
-      dateArr = parseDate(date);
+      dateArr = ParseDate(date);
       year = '20' + dateArr[0].toString();
       month = dateArr[1].toString();
       day = dateArr[2].toString();
 
       var format;
       if (filterIndex == 0){
+        domainType = 1; //0 = year, 1 = month, 2 = day, 3 = time
         format = year;
         dateInput = month + '/' + year;
       }
       else if (filterIndex == 1){
+        domainType = 2; //0 = year, 1 = month, 2 = day, 3 = time
         format = month + '/' + year;
         dateInput = month + '/' + day + '/' + year;
       }
       else {
+        domainType = 3; //0 = year, 1 = month, 2 = day, 3 = time
         format = month + '/' + day + '/' + year;
         dateInput = time;
       }
@@ -304,10 +355,10 @@ function Update(d){
 
     //width =  window.innerWidth/data.length;
     if (filterIndex == 2){
-      CreatePlot(data, xAxisTitle, 's');
+      CreatePlot(data, 's');
     }
     else {
-      CreatePlot(data, xAxisTitle, 'b');
+      CreatePlot(data, 'b');
     }
   });
 }
@@ -328,22 +379,20 @@ function GoBack(){
     var day;
     var index = 0;
     var filterIndex;
-    var xAxisTitle;
 
     if (d['date'].match(/\//g || []) == null){ //year
+      domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
       filterIndex = 0;
       d['date'] = "";
-      xAxisTitle = "Year";
     }
     else if (d['date'].match(/\//g || []).length == 1){ //month, year
+      domainType = 1; //0 = year, 1 = month, 2 = day, 3 = time
       filterIndex = 1;
       d['date'] = d['date'].substring(d['date'].length-4, d['date'].length); //year
-      xAxisTitle = "Month";
     }
     else { //day, month, year
+      domainType = 2; //0 = year, 1 = month, 2 = day, 3 = time
       d['date'] = d['date'].substring(0, d['date'].indexOf('/') + 1) + d['date'].substring(d['date'].length-4, d['date'].length); //month, year
-      console.log(d['date']);
-      xAxisTitle = "Day";
     }
 
     d3.selectAll("svg").remove(); //delete current box plots
@@ -355,7 +404,7 @@ function GoBack(){
       time = x.time,
       heartRate = Math.floor(x.heart_rate);
 
-      dateArr = parseDate(date);
+      dateArr = ParseDate(date);
       year = '20' + dateArr[0].toString();
       month = dateArr[1].toString();
       day = dateArr[2].toString();
@@ -400,7 +449,7 @@ function GoBack(){
       }
     });
 
-    CreatePlot(data, xAxisTitle, 'b');
+    CreatePlot(data, 'b');
   });
 }
 

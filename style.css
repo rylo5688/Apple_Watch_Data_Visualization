@@ -28,6 +28,7 @@ h1{
   width: window.width;
   padding:15px;
   text-align: center;
+  overflow-x: scroll;
 }
 
 .x-axis {
@@ -41,6 +42,8 @@ h1{
 }
 
 .y-axis {
+  position: fixed;
+  float: left;
   font: 12px sans-serif;
 }
 .y-axis path,
