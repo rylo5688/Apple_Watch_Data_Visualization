@@ -1,11 +1,10 @@
 //Goal for next time: For all domains other than time we want to be able to scroll throughout the whole scope of the data
 
-
 //GLOBALS
-var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
 'September', 'October', 'November', 'December'];
-var days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-var time = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
+var DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
 var previousData;
@@ -75,11 +74,11 @@ function CreateDomain(data){
         .domain(arr)
         .rangeBands([0 , width], .93);
 
-    case 2: //days
+    case 2: //DAYS
       var date = ParseDate(data[0][0]);
-      var totalDays = days[date[1]-1]
+      var totalDAYS = DAYS[date[1]-1]
 
-      for (var i = 1; i <= totalDays; i++){
+      for (var i = 1; i <= totalDAYS; i++){
         arr.push(date[1] + "/" + i.toString() + "/" + date[0]);
       }
 
@@ -89,7 +88,7 @@ function CreateDomain(data){
 
     case 3: //time
       return d3.scale.ordinal()
-                .domain(time)
+                .domain(TIME)
                 .rangeBands([0 , width], .4);
   };
 }
@@ -97,7 +96,7 @@ function CreateDomain(data){
 
 function CreatePlot(data, type){
   //rescaling
-  var extendScreen = data.length >= 12 ? (data.length) * 50 : 0;
+  var extendScreen = data.length >= 12 ? (data.length) * 80 : 0;
   d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
   d3.select(".box").style("width", window.innerWidth + extendScreen + "px");
 
@@ -130,8 +129,8 @@ function CreatePlot(data, type){
 
   // the y-axis
   var y = d3.scale.linear()
-    .domain([min, max])
-    .range([height + margin.top, 0 + margin.top]);
+    .domain([0, 200])
+    .range([height + margin.top, 0]);
 
   var yAxis = d3.svg.axis()
     .scale(y)
@@ -196,6 +195,33 @@ function CreatePlot(data, type){
         .on("click", Update);
     });
   }
+
+  //adding lines for the max and min BPM
+  var maxBPM = type == 'b' ? d3.select(".box") : d3.select(".scatter");
+  if (document.getElementById("restingFilter").checked == true){
+      maxBPM.append("line")
+      .style("stroke", "red")
+      .attr("x1", margin.left)
+      .attr("y1", y(100) + margin.top)
+      .attr("x2", width + margin.right)
+      .attr("y2", y(100) + margin.top);
+  }
+  else {
+    maxBPM.append("line")
+    .style("stroke", "red")
+    .attr("x1", margin.left)
+    .attr("y1", y(150) + margin.top)
+    .attr("x2", width + margin.right)
+    .attr("y2", y(150) + margin.top);
+  }
+
+  var minBPM = type == 'b' ? d3.select(".box") : d3.select(".scatter");
+    minBPM.append("line")
+    .style("stroke", "blue")
+    .attr("x1", margin.left)
+    .attr("y1", y(60) + margin.top)
+    .attr("x2", width + margin.right)
+    .attr("y2", y(60) + margin.top);
 
   //draw y axis
   svg.append("g")

@@ -13,7 +13,11 @@ d3.box = function() {
       whiskers = boxWhiskers,
       quartiles = boxQuartiles,
       showLabels = true,
-      tickFormat = null;
+      tickFormat = null,
+
+      //THESE ARE TEMPORARY FOR RESTING
+      min = 60;
+      max = 100;
 
   // For each small multiple…
   function box(g) {
@@ -40,14 +44,15 @@ d3.box = function() {
 
       // Compute outliers. If no whiskers are specified, all data are "outliers".
       // We compute the outliers as indices, so that we can join across transitions!
+
       var outlierIndices = whiskerIndices
           ? d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
           : d3.range(n);
 
       // Compute the new x-scale.
       var x1 = d3.scale.linear()
-          .domain(domain && domain.call(this, d, i) || [min, max])
-          .range([height, 0]);
+          .domain([0, 200])
+          .range([height + margin.top, 0]);
 
       // Retrieve the old x-scale, if this is an update.
       var x0 = this.__chart__ || d3.scale.linear()

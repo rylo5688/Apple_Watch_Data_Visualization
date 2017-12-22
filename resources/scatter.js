@@ -17,8 +17,8 @@ d3.scatter = function() {
           //console.log(time);
           //Compute the new x-scale.
           var x1 = d3.scale.linear()
-              .domain(domain && domain.call(this, d, i) || [min, max])
-              .range([height, 0]);
+              .domain([0, 200])
+              .range([height + margin.top, 0]);
 
           // Retrieve the old x-scale, if this is an update.
           var x0 = this.__chart__ || d3.scale.linear()

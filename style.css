@@ -79,3 +79,7 @@ div.triangle-back:hover{
   border-top: 0px solid #7FFFD4;
   border-left: 50px solid #7FFFD4;
 }
+
+.filters{
+  text-align: right;
+}
