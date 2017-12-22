@@ -97,7 +97,7 @@ function CreateDomain(data){
 
 function CreatePlot(data, type){
   //rescaling
-  var extendScreen = data.length >= 12 ? (data.length-12) * 80 : 0;
+  var extendScreen = data.length >= 12 ? (data.length) * 50 : 0;
   d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
   d3.select(".box").style("width", window.innerWidth + extendScreen + "px");
 
@@ -160,6 +160,7 @@ function CreatePlot(data, type){
     var timeString;
     var hour;
     var minute;
+    var second;
     var offset;
 
     //NOTE: This does not work if the readings start with pm...
@@ -179,11 +180,14 @@ function CreatePlot(data, type){
       }
       hour = hour + meridiem; //so that the time becomes 12am, etc.
 
-      timeString = timeString.substring(timeString.indexOf(':') + 1, timeString.length-1);
+      timeString = timeString.substring(timeString.indexOf(':') + 1, timeString.length);
       minute = timeString.substring(0, timeString.indexOf(':')); //to use for getting the offset
+      second = timeString.substring(timeString.indexOf(":") + 1, timeString.length);
 
-      offset = x(hour) + parseFloat(minute)/60.0*tickWidth
+      //calculating the distance between ticks
+      offset = x(hour) + parseFloat(minute)/60.0*tickWidth + parseFloat(second)/360.0*tickWidth;
 
+      //creating scatter plot "dots"
       svg.selectAll(".scatter")
           .data(arr)
         .enter().append("g")
