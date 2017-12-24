@@ -8,6 +8,7 @@ var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
 var previousData;
+var previousType;
 var margin = {top: 30, right: 30, bottom: 70, left: 30},
 width = window.innerWidth*.95 - margin.left - margin.right,
 height = window.innerHeight * 0.7;
@@ -17,6 +18,9 @@ max = -Infinity;
 
 var domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
 var domainTitle = ['Year', 'Month', 'Day', 'Time'];
+
+var maxBPM = 100;
+var minBPM = 60;
 
 var chart = d3.box()
   .whiskers(iqr(1.5))
@@ -93,25 +97,56 @@ function CreateDomain(data){
   };
 }
 
+function UpdateBPMRange(type){
+  d3.selectAll(".maxBPMLine").remove(); //delete current box plots
+  d3.selectAll(".minBPMLine").remove(); //delete current box plots
+  if (type == null){
+    type = previousType;
+  }
+
+  // the y-axis
+  var y = d3.scale.linear()
+    .domain([0, 200])
+    .range([height + margin.top, 0]);
+
+
+  //adding lines for the max and min BPM
+  var maxBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
+  if (document.getElementById("restingFilter").checked == true){
+      maxBPMLine.append("line")
+      .attr("class", "maxBPMLine")
+      .style("stroke", "red")
+      .attr("x1", margin.left)
+      .attr("y1", y(maxBPM) + margin.top)
+      .attr("x2", width + margin.right)
+      .attr("y2", y(maxBPM) + margin.top);
+  }
+  else {
+    maxBPMLine.append("line")
+    .attr("class", "maxBPMLine")
+    .style("stroke", "red")
+    .attr("x1", margin.left)
+    .attr("y1", y(150) + margin.top)
+    .attr("x2", width + margin.right)
+    .attr("y2", y(150) + margin.top);
+  }
+
+  var minBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
+    minBPMLine.append("line")
+    .attr("class", "minBPMLine")
+    .style("stroke", "blue")
+    .attr("x1", margin.left)
+    .attr("y1", y(minBPM) + margin.top)
+    .attr("x2", width + margin.right)
+    .attr("y2", y(minBPM) + margin.top);
+}
 
 function CreatePlot(data, type){
-  if (data == null){
-    console.log("Error: null dataset");
-    data = previousData;
-  }
-  else if (data == previousData){
-    console.log(data);
-    console.log(previousData);
-  }
-
   //rescaling
   var extendScreen = data.length >= 12 ? (data.length) * 80 : 0;
   d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
   d3.select(".box").style("width", window.innerWidth + extendScreen + "px");
   width = window.innerWidth*.95 - margin.left - margin.right + extendScreen; //to compensate for screen size changes
-
-  var maxBPM = 100;
-  var minBPM = 60;
 
   if (type == 'b'){ //box plot
     //create box plots based off of the max bpms
@@ -210,32 +245,7 @@ function CreatePlot(data, type){
     });
   }
 
-  //adding lines for the max and min BPM
-  var maxBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
-  if (document.getElementById("restingFilter").checked == true){
-      maxBPMLine.append("line")
-      .style("stroke", "red")
-      .attr("x1", margin.left)
-      .attr("y1", y(maxBPM) + margin.top)
-      .attr("x2", width + margin.right)
-      .attr("y2", y(maxBPM) + margin.top);
-  }
-  else {
-    maxBPMLine.append("line")
-    .style("stroke", "red")
-    .attr("x1", margin.left)
-    .attr("y1", y(150) + margin.top)
-    .attr("x2", width + margin.right)
-    .attr("y2", y(150) + margin.top);
-  }
-
-  var minBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
-    minBPMLine.append("line")
-    .style("stroke", "blue")
-    .attr("x1", margin.left)
-    .attr("y1", y(minBPM) + margin.top)
-    .attr("x2", width + margin.right)
-    .attr("y2", y(minBPM) + margin.top);
+  UpdateBPMRange(type);
 
   //draw y axis
   svg.append("g")
@@ -261,6 +271,9 @@ function CreatePlot(data, type){
         .style("text-anchor", "middle")
         .style("font-size", "16px")
         .text(domainTitle[domainType]);
+
+    previousData = data;
+    previousType = type;
 }
 
 function GoToHome(){
@@ -306,7 +319,6 @@ function GoToHome(){
     });
 
     chart.domain([min, max]);
-    previousData = d;
 
     domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
     CreatePlot(d, 'b');
@@ -396,7 +408,6 @@ function Update(d){
     });
     chart.domain([min, max]);
     chartScatter.domain([min,max]);
-    previousData = d;
 
     //width =  window.innerWidth/data.length;
     if (filterIndex == 2){
