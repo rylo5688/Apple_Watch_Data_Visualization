@@ -123,18 +123,14 @@ d3.box = function() {
 
       outlier.enter().insert("circle", "text")
           .attr("class", "outlier")
-          .attr("r", 3)
+          .attr("r", 1)
           .attr("cx", width / 2)
           .attr("cy", function(i) { return x0(d[i]); })
-          .style("opacity", 1e-10)
+          .style("fill", function (i){ return heatmapColor(d, i, minBPM, maxBPM); })
+          .style("stroke", function (i){ return heatmapColor(d, i, minBPM, maxBPM); })
         .transition()
           .duration(duration)
-          .attr("cy", function(i) { return y0(d[i]); })
-          .style("opacity", 1);
-      outlier.transition()
-          .duration(duration)
-          .attr("cy", function(i) { return y0(d[i]); })
-          .style("opacity", 1);
+          .attr("cy", function(i) { return y0(d[i]); });
 
       var format = y0.tickFormat(8);
 
@@ -252,6 +248,60 @@ function boxQuartiles(d) {
     d3.quantile(d, .5),
     d3.quantile(d, .75)
   ];
+}
+
+function heatmapColor(d, index, minBPM, maxBPM){
+  var concentration = 0;
+
+  //Checking indices before this index
+  for (var i = index; i > 0 && d[i] > minBPM; i--){
+    if (Math.abs(d[i] - d[i-1]) <= 2){
+      concentration++;
+    }
+    else{
+      break;
+    }
+  }
+
+  //Checking indices after this index
+  for (var i = index; i < d.length && d[i] < maxBPM; i++){
+    if (Math.abs(d[i] - d[i+1]) <= 2){
+      concentration++;
+    }
+    else{
+      break;
+    }
+  }
+
+  //Deciding color based on concentration
+  switch(concentration){
+    case 0:
+    case 1:
+      return "#0019FF";
+      break;
+    case 2:
+      return "#007DFF";
+      break;
+    case 3:
+      return "#00D2FF";
+      break;
+    case 4:
+      return "#00FF3F";
+      break;
+    case 5:
+      return "#9FFF00";
+      break;
+    case 6:
+      return "#6BFF00";
+      break;
+    case 7:
+      return "#FF8000";
+      break;
+    case 8:
+    default:
+      return "#FF0000";
+      break;
+  }
 }
 
 })();

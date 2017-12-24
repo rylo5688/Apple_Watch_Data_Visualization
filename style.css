@@ -70,10 +70,10 @@ h1{
   stroke-dasharray: 3,3;
 }
 
-.box .outlier {
+/*.box .outlier {
   fill: none;
   stroke: #ccc;
-}
+}*/
 
 div.triangle-back:hover{
   border-top: 0px solid #7FFFD4;

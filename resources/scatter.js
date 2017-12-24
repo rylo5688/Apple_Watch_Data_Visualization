@@ -16,14 +16,14 @@ d3.scatter = function() {
           //d = d.map(value).sort(d3.ascending);
           //console.log(time);
           //Compute the new x-scale.
-          var x1 = d3.scale.linear()
+          var y0 = d3.scale.linear()
               .domain([0, 200])
               .range([height + margin.top, 0]);
 
           // Retrieve the old x-scale, if this is an update.
-          var x0 = this.__chart__ || d3.scale.linear()
+          var x0 = d3.scale.linear()
               .domain([0, Infinity])
-              .range(x1.range());
+              .range(y0.range());
 
           var dot = g.selectAll("circle.scatter")
               .data(d);
@@ -36,19 +36,8 @@ d3.scatter = function() {
               .style("opacity", 1e-10)
             .transition()
               .duration(duration)
-              .attr("cy", x1(d))
+              .attr("cy", y0(d))
               .style("opacity", 1);
-
-          dot.transition()
-              .duration(duration)
-              .attr("cy", x1(d))
-              .style("opacity", 1);
-
-          dot.exit().transition()
-              .duration(duration)
-              .attr("cy", x1(d))
-              .style("opacity", 1e-6)
-              .remove();
       })
     }
 

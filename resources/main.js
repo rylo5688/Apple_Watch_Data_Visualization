@@ -95,6 +95,15 @@ function CreateDomain(data){
 
 
 function CreatePlot(data, type){
+  if (data == null){
+    console.log("Error: null dataset");
+    data = previousData;
+  }
+  else if (data == previousData){
+    console.log(data);
+    console.log(previousData);
+  }
+
   //rescaling
   var extendScreen = data.length >= 12 ? (data.length) * 80 : 0;
   d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
@@ -260,7 +269,7 @@ function GoToHome(){
   d3.csv("data/hassan-HR-data.csv", function(error, csv) {
     if (error) throw error;
 
-    var data = [];
+    var d = [];
     var dateArr;
     var year;
     var month;
@@ -276,16 +285,16 @@ function GoToHome(){
       month = dateArr[1].toString();
       day = dateArr[2].toString();
 
-      if (data[index] == null){
-        data[index] = [year];
+      if (d[index] == null){
+        d[index] = [year];
       }
 
-      if (data[index][0] != year){
+      if (d[index][0] != year){
         index++;
-        data[index] = [year];
+        d[index] = [year];
       }
 
-      data[index].push(heartRate);
+      d[index].push(heartRate);
 
       //Changing mins and maxes when needed
       if (heartRate > max){
@@ -297,9 +306,10 @@ function GoToHome(){
     });
 
     chart.domain([min, max]);
+    previousData = d;
 
     domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
-    CreatePlot(data, 'b');
+    CreatePlot(d, 'b');
   });
 }
 
