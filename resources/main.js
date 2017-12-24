@@ -99,10 +99,16 @@ function CreatePlot(data, type){
   var extendScreen = data.length >= 12 ? (data.length) * 80 : 0;
   d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
   d3.select(".box").style("width", window.innerWidth + extendScreen + "px");
-
   width = window.innerWidth*.95 - margin.left - margin.right + extendScreen; //to compensate for screen size changes
 
+  var maxBPM = 100;
+  var minBPM = 60;
+
   if (type == 'b'){ //box plot
+    //create box plots based off of the max bpms
+    chart.maxBPM(maxBPM);
+    chart.minBPM(minBPM);
+
     var svg = d3.select("body").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
@@ -162,7 +168,6 @@ function CreatePlot(data, type){
     var second;
     var offset;
 
-    //NOTE: This does not work if the readings start with pm...
     data.forEach(function(element){
       arr = [element];
       timeString = arr[0][0];
@@ -197,17 +202,17 @@ function CreatePlot(data, type){
   }
 
   //adding lines for the max and min BPM
-  var maxBPM = type == 'b' ? d3.select(".box") : d3.select(".scatter");
+  var maxBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
   if (document.getElementById("restingFilter").checked == true){
-      maxBPM.append("line")
+      maxBPMLine.append("line")
       .style("stroke", "red")
       .attr("x1", margin.left)
-      .attr("y1", y(100) + margin.top)
+      .attr("y1", y(maxBPM) + margin.top)
       .attr("x2", width + margin.right)
-      .attr("y2", y(100) + margin.top);
+      .attr("y2", y(maxBPM) + margin.top);
   }
   else {
-    maxBPM.append("line")
+    maxBPMLine.append("line")
     .style("stroke", "red")
     .attr("x1", margin.left)
     .attr("y1", y(150) + margin.top)
@@ -215,13 +220,13 @@ function CreatePlot(data, type){
     .attr("y2", y(150) + margin.top);
   }
 
-  var minBPM = type == 'b' ? d3.select(".box") : d3.select(".scatter");
-    minBPM.append("line")
+  var minBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
+    minBPMLine.append("line")
     .style("stroke", "blue")
     .attr("x1", margin.left)
-    .attr("y1", y(60) + margin.top)
+    .attr("y1", y(minBPM) + margin.top)
     .attr("x2", width + margin.right)
-    .attr("y2", y(60) + margin.top);
+    .attr("y2", y(minBPM) + margin.top);
 
   //draw y axis
   svg.append("g")

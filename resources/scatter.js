@@ -25,9 +25,6 @@ d3.scatter = function() {
               .domain([0, Infinity])
               .range(x1.range());
 
-          // Stash the new scale.
-          this.__chart__ = x1;
-
           var dot = g.selectAll("circle.scatter")
               .data(d);
 
