@@ -9,7 +9,7 @@ var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am
 
 var previousData;
 var previousType;
-var margin = {top: 30, right: 30, bottom: 70, left: 30},
+var margin = {top: 50, right: 50, bottom: 100, left: 50},
 width = window.innerWidth*.95 - margin.left - margin.right,
 height = window.innerHeight * 0.7;
 
@@ -21,6 +21,7 @@ var domainTitle = ['Year', 'Month', 'Day', 'Time'];
 
 var maxBPM = 100;
 var minBPM = 60;
+var age = 40;
 
 var chart = d3.box()
   .whiskers(iqr(1.5))
@@ -69,7 +70,6 @@ function CreateDomain(data){
 
     case 1: //month
       var date = ParseDate(data[0][0]);
-      console.log(date);
       for (var i = 1; i <= 12; i++){
         arr.push(i.toString() + "/" + date[2]); //NOTE: Need to fix ParseDate to accept other date formats
       }
@@ -98,8 +98,9 @@ function CreateDomain(data){
 }
 
 function UpdateBPMRange(type){
-  d3.selectAll(".maxBPMLine").remove(); //delete current box plots
-  d3.selectAll(".minBPMLine").remove(); //delete current box plots
+  d3.selectAll(".maxBPMLine").remove(); //delete maxBPMLine
+  d3.selectAll(".minBPMLine").remove(); //delete minBPMLine
+  d3.selectAll(".moderateActivityRange").remove(); //delete moderateActivityRange
   if (type == null){
     type = previousType;
   }
@@ -112,7 +113,7 @@ function UpdateBPMRange(type){
 
   //adding lines for the max and min BPM
   var maxBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
-  if (document.getElementById("restingFilter").checked == true){
+  if (document.getElementById("restingFilter").checked == true){ //resting max
       maxBPMLine.append("line")
       .attr("class", "maxBPMLine")
       .style("stroke", "red")
@@ -121,14 +122,27 @@ function UpdateBPMRange(type){
       .attr("x2", width + margin.right)
       .attr("y2", y(maxBPM) + margin.top);
   }
-  else {
+  else { //active max
+    var maxActiveBPM = 208-.7*age;
+    console.log(maxActiveBPM);
     maxBPMLine.append("line")
     .attr("class", "maxBPMLine")
     .style("stroke", "red")
     .attr("x1", margin.left)
-    .attr("y1", y(150) + margin.top)
+    .attr("y1", y(maxActiveBPM) + margin.top)
     .attr("x2", width + margin.right)
-    .attr("y2", y(150) + margin.top);
+    .attr("y2", y(maxActiveBPM) + margin.top);
+
+    var moderateActivityRange = maxBPMLine;
+    moderateActivityRange.append("rect")
+    .attr("class", "moderateActivityRange")
+    .style("stroke", "red")
+    .style("fill", "red")
+    .style("opacity", .3)
+    .attr("x", margin.left)
+    .attr("y", y(.5*maxActiveBPM) + margin.top)
+    .attr("width", width)
+    .attr("height", y(.5*maxActiveBPM) - (y(.69*maxActiveBPM) + margin.top));
   }
 
   var minBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
@@ -143,7 +157,19 @@ function UpdateBPMRange(type){
 
 function CreatePlot(data, type){
   //rescaling
-  var extendScreen = data.length >= 12 ? (data.length) * 80 : 0;
+  var extendScreen = 0;
+  if (data[0][0].match(/\//g || []) == null){ //year
+    extendScreen = data.length >= 6 ? (data.length) * 20 : 0;
+  }
+  else if (data[0][0].match(/\//g || []).length == 1){ //month, year
+    extendScreen = data.length >= 6 ? (data.length) * 40 : (data.length) * 30;
+  }
+  else if (data[0][0].match(/\//g || []).length == 2){ //month, day year
+    extendScreen = data.length >= 15 ? (data.length) * 110 : (data.length) * 100;
+  }
+  else { //time
+    extendScreen = data.length >= 50 ? (data.length) * 85 : (data.length) * 50;
+  }
   d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
   d3.select(".box").style("width", window.innerWidth + extendScreen + "px");
   width = window.innerWidth*.95 - margin.left - margin.right + extendScreen; //to compensate for screen size changes
@@ -272,7 +298,6 @@ function CreatePlot(data, type){
         .style("font-size", "16px")
         .text(domainTitle[domainType]);
 
-    previousData = data;
     previousType = type;
 }
 
@@ -319,6 +344,7 @@ function GoToHome(){
     });
 
     chart.domain([min, max]);
+    previousData = null;
 
     domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
     CreatePlot(d, 'b');
@@ -408,6 +434,7 @@ function Update(d){
     });
     chart.domain([min, max]);
     chartScatter.domain([min,max]);
+    previousData = d;
 
     //width =  window.innerWidth/data.length;
     if (filterIndex == 2){

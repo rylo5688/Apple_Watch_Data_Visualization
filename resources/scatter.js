@@ -30,7 +30,7 @@ d3.scatter = function() {
 
           dot.enter().insert("circle", "text")
               .attr("class", "scatter-dot")
-              .attr("r", 3)
+              .attr("r", 1.5)
               .attr("cx", width/2)
               .attr("cy", x0(d))
               .style("opacity", 1e-10)

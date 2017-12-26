@@ -77,5 +77,6 @@ div.triangle-back:hover{
 }
 
 .filters{
-  text-align: right;
+  position: fixed;
+  right: 5%;
 }
