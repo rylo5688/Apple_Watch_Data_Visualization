@@ -7,7 +7,7 @@
 d3.box = function() {
   var width = 1,
       height = 1,
-      duration = 0,
+      duration = 250,
       domain = null,
       value = Number,
       whiskers = boxWhiskers,
@@ -85,12 +85,12 @@ d3.box = function() {
           .attr("class", "center")
           .attr("x1", width / 2)
           .attr("x2", width / 2)
-          .style("opacity", 1e-6)
+          .attr("y1", function(d) { return y0(d[0]); })
+          .attr("y2", function(d) { return y0(d[1]); })
+          .style("opacity", 0)
         .transition()
           .duration(duration)
-          .style("opacity", 1)
-          .attr("y1", function(d) { return y0(d[0]); })
-          .attr("y2", function(d) { return y0(d[1]); });
+          .style("opacity", 1);
 
       //Creating the box for the box plot
       var box = g.selectAll("rect.box")
@@ -99,13 +99,14 @@ d3.box = function() {
       box.enter().append("rect")
           .attr("class", "box")
           .attr("x", 0)
-          .attr("y", function(d) { return x0(d[2]); })
+          .attr("y", function(d) { return y0(d[2]); })
           .attr("width", width)
-          .attr("height", function(d) { return x0(d[0]) - x0(d[2]); })
+          .attr("height", function(d) { return y0(d[0]) - y0(d[2]); })
+          .style("opacity", 0)
         .transition()
           .duration(duration)
-          .attr("y", function(d) { return y0(d[2]); })
-          .attr("height", function(d) { return y0(d[0]) - y0(d[2]); });
+          .style("opacity", 1);
+
 
       //Creating the median line for the box plots
       var medianLine = g.selectAll("line.median")
@@ -115,10 +116,12 @@ d3.box = function() {
           .attr("class", "median")
           .attr("x1", 0)
           .attr("x2", width)
+          .attr("y1", y0)
+          .attr("y2", y0)
+          .style("opacity", 0)
         .transition()
           .duration(duration)
-          .attr("y1", y0)
-          .attr("y2", y0);
+          .style("opacity", 1);
 
       //Creating the whiskers for the box plots
       var whisker = g.selectAll("line.whisker")
@@ -127,14 +130,12 @@ d3.box = function() {
       whisker.enter().insert("line", "circle, text")
           .attr("class", "whisker")
           .attr("x1", 0)
-          .attr("y1", x0)
           .attr("x2", 0 + width)
-          .attr("y2", x0)
-          .style("opacity", 1e-6)
-        .transition()
-          .duration(duration)
           .attr("y1", y0)
           .attr("y2", y0)
+          .style("opacity", 0)
+        .transition()
+          .duration(duration)
           .style("opacity", 1);
 
       //Adding the outlier dots to the box plots
@@ -143,14 +144,16 @@ d3.box = function() {
 
       outlier.enter().insert("circle", "text")
           .attr("class", "outlier")
-          .attr("r", 1)
+          .attr("r", 3)
           .attr("cx", width / 2)
-          .attr("cy", function(i) { return x0(d[i]); })
+          .attr("cy", function(i) { return y0(d[i]); })
           .style("fill", function (i){ return heatmapColor(d, i, minBPM, maxBPM); })
           .style("stroke", function (i){ return heatmapColor(d, i, minBPM, maxBPM); })
+          .style("opacity", 0)
         .transition()
-          .duration(duration)
-          .attr("cy", function(i) { return y0(d[i]); });
+          .duration(2*duration)
+          .attr("r", 1)
+          .style("opacity", 1);
 
       var format = y0.tickFormat(8);
 
@@ -164,12 +167,13 @@ d3.box = function() {
             .attr("dy", ".3em")
             .attr("dx", function(d, i) { return i & 1 ? 6 : -6 })
             .attr("x", function(d, i) { return i & 1 ? width : 0 })
-            .attr("y", x0)
+            .attr("y", y0)
             .attr("text-anchor", function(d, i) { return i & 1 ? "start" : "end"; })
             .text(format)
+            .style("opacity", 0)
           .transition()
             .duration(duration)
-            .attr("y", y0);
+            .style("opacity", 1);
       }
 
       //Adding values next to the end of the whiskers
@@ -182,12 +186,11 @@ d3.box = function() {
             .attr("dy", ".3em")
             .attr("dx", 6)
             .attr("x", width)
-            .attr("y", x0)
+            .attr("y", y0)
             .text(format)
-            .style("opacity", 1e-6)
+            .style("opacity", 0)
           .transition()
             .duration(duration)
-            .attr("y", y0)
             .style("opacity", 1);
       }
     })

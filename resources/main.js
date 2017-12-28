@@ -171,6 +171,15 @@ function UpdateBPMRange(data, dataTime, type){
 }
 
 function CreatePlot(data, dataTime, type){
+  if (data == currentData){ //updating current plot
+    chart.duration(0);
+    chartScatter.duration(0);
+  }
+  else{
+    chart.duration(300);
+    chartScatter.duration(300);
+  }
+
   //rescaling
   var extendScreen = 0;
   if (data[0][0].match(/\//g || []) == null){ //year
