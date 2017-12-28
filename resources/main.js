@@ -104,9 +104,10 @@ function UpdateBPMRange(data, dataTime, type){
   d3.selectAll("svg").remove(); //delete current box plots
 
   //setting maxBPM and minBPM
-  if (document.getElementById("restingFilter").checked == true){ //resting max
+  if (d3.select("#restingFilter").property("checked") == true){ //resting max
       chart.maxBPM(100);
-  } else { //active max
+  }
+  else if (d3.select("#activeFilter").property("checked") == true) { //active max
       var maxActiveBPM = 208-.7*age;
       chart.maxBPM(maxActiveBPM);
   }
@@ -129,7 +130,7 @@ function UpdateBPMRange(data, dataTime, type){
 
   //adding lines for the max and min BPM
   var maxBPMLine = type == 'b' ? d3.select(".box").select("g") : d3.select(".scatter").select("g");
-  if (document.getElementById("restingFilter").checked == true){ //resting max
+  if (d3.select("#restingFilter").property("checked") == true){ //resting max
       maxBPMLine.append("line")
       .attr("class", "maxBPMLine")
       .style("stroke", "red")
@@ -205,7 +206,7 @@ function CreatePlot(data, dataTime, type){
 
   if (type == 'b'){ //box plot
     //create box plots based off of the max bpms
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select(".data").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
       .attr("class", "box")
@@ -213,7 +214,7 @@ function CreatePlot(data, dataTime, type){
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   }
   else if (type == 's'){ //scatter plot
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select(".data").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
       .attr("class", "scatter")
@@ -240,7 +241,68 @@ function CreatePlot(data, dataTime, type){
     .scale(y)
     .orient("left");
 
-  if (type == 'b'){ //draw the box plots
+  //draw left y axis
+  svg.append("g")
+        .attr("class", "y-axis")
+        .call(yAxis)
+    .append("text") // and text1
+      .attr("transform", "translate( -50 ," + height/2 + ")rotate(-90)")
+      //.attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "middle")
+      .style("font-size", "16px")
+      .text("Heart Rate");
+
+  //draw right y axis
+  yAxis.orient("right");
+  svg.append("g")
+        .attr("class", "y-axis")
+        .attr("transform", "translate(" + width + ")")
+        .call(yAxis)
+      .append("text") // and text1
+        .attr("transform", "translate( 50 ," + height/2 + ")rotate(90)")
+        //.attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "middle")
+        .style("font-size", "16px")
+        .text("Heart Rate");
+
+  //draw x axis
+  svg.append("g")
+      .attr("class", "x-axis")
+      .attr("transform", "translate(0," + (height  + margin.top) + ")")
+      .call(xAxis)
+    .append("text")             // text label for the x axis
+        .attr("x", (width / 2) )
+        .attr("y",  25 )
+        .attr("dy", ".71em")
+        .style("text-anchor", "middle")
+        .style("font-size", "16px")
+        .text(domainTitle[domainType]);
+
+  //draw grid lines
+  svg.append("line")
+    .attr("class", "grid")
+    .style("stroke", "black")
+    .style("opacity", 1)
+    .attr("x1", 0)
+    .attr("y1", y(200))
+    .attr("x2", width)
+    .attr("y2", y(200));
+
+  for (i = 180; i > 0; i-=20){
+    svg.append("line")
+      .attr("class", "grid")
+      .style("stroke", "black")
+      .style("opacity", .05)
+      .attr("x1", 0)
+      .attr("y1", y(i))
+      .attr("x2", width)
+      .attr("y2", y(i));
+  }
+
+  //Creating the plots
+  if (type == 'b'){ //box plots
     chart.dataTime(dataTime);
 
     svg.selectAll(".box")
@@ -250,7 +312,7 @@ function CreatePlot(data, dataTime, type){
         .call(chart.width(x.rangeBand()))
       .on("click", ZoomIn);
   }
-  else if (type == 's'){ //draw the scatter plots
+  else if (type == 's'){ //scatter plot
     //readjusting the x-axis
     x = CreateDomain(data);
 
@@ -300,31 +362,6 @@ function CreatePlot(data, dataTime, type){
         .on("click", ZoomIn);
     });
   }
-
-  //draw y axis
-  svg.append("g")
-        .attr("class", "y-axis")
-        .call(yAxis)
-    .append("text") // and text1
-      .attr("transform", "rotate(-90)")
-      .attr("y", 6)
-      .attr("dy", ".71em")
-      .style("text-anchor", "end")
-      .style("font-size", "16px")
-      .text("Heart Rate");
-
-  // draw x axis
-  svg.append("g")
-      .attr("class", "x-axis")
-      .attr("transform", "translate(0," + (height  + margin.top) + ")")
-      .call(xAxis)
-    .append("text")             // text label for the x axis
-        .attr("x", (width / 2) )
-        .attr("y",  25 )
-        .attr("dy", ".71em")
-        .style("text-anchor", "middle")
-        .style("font-size", "16px")
-        .text(domainTitle[domainType]);
 }
 
 function GoToHome(){
@@ -332,6 +369,8 @@ function GoToHome(){
   d3.selectAll("svg").remove(); //delete current box plots
   chart.maxBPM(null);
   chart.minBPM(null);
+  d3.selectAll("#restingFilter").property("checked", false);
+  d3.selectAll("#activeFilter").property("checked", false);
 
 
   d3.csv("data/hassan-HR-data.csv", function(error, csv) {

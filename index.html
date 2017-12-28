@@ -5,20 +5,26 @@
     <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script> <!-- This uses d3js Version 3, NOTE: Version 4 has changes so code will not work -->
 </head>
 
-<div class="triangle-back" onclick="ZoomOut()"></div>
-<h1 id="title" onclick="GoToHome()">
-  hassan-HR-data
-</h1>
-<form class="filters">
-  <!-- Still need to add onclick functionality so the charts update -->
-  <input type="radio" id="restingFilter" name="filter" value="resting" onclick="UpdateBPMRange()"> Resting<br>
-  <input type="radio" id="activeFilter" name="filter" value="active" onclick="UpdateBPMRange()"> Active<br>
-</form>
+<body>
+<div class="headers">
+  <div class="triangle-back" onclick="ZoomOut()"></div>
+  <h1 id="title" onclick="GoToHome()">
+    hassan-HR-data
+  </h1>
+  <form class="filters">
+    <!-- Still need to add onclick functionality so the charts update -->
+    <input type="radio" id="restingFilter" name="filter" value="resting" onclick="UpdateBPMRange()"> Resting<br>
+    <input type="radio" id="activeFilter" name="filter" value="active" onclick="UpdateBPMRange()"> Active<br>
+  </form>
+</div>
 
-<body class="data">
+<div class="data">
   <script type="text/javascript" src="resources/box.js"></script>
   <script type="text/javascript" src="resources/scatter.js"></script>
   <script type="text/javascript" src="resources/main.js"></script>
-  <script>GoToHome()</script>
+  <script>
+    GoToHome();
+  </script>
+</div>
 </body>
 </html>

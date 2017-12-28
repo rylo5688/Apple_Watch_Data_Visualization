@@ -107,7 +107,6 @@ d3.box = function() {
           .duration(duration)
           .style("opacity", 1);
 
-
       //Creating the median line for the box plots
       var medianLine = g.selectAll("line.median")
           .data([quartileData[1]]);
@@ -259,6 +258,7 @@ d3.box = function() {
   }
 
   box.maxBPM = function(x) {
+    console.log("test: " + x);
     if (!arguments.length) return maxBPM;
     maxBPM = x;
     return box;
