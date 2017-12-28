@@ -42,7 +42,7 @@ d3.box = function() {
         return;
       }
       else {
-        dataTime.splice(0, 1);
+        timeArray.splice(0, 1);
       }
 
       //We need our own sort so we can put the data in ascending order while changing the matching indexes of the time array
@@ -66,10 +66,6 @@ d3.box = function() {
       var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
 
       outlierIndices = validOutliers(d, timeArray, outlierIndices, date);
-
-      // console.log(outlierIndices);
-      // console.log(d);
-      // console.log(timeArray);
 
       //y-axis scale
       var y0 = d3.scale.linear()
@@ -283,7 +279,10 @@ function boxQuartiles(d) {
 function heatmapColor(d, index, minBPM, maxBPM){
   var concentration = 0;
 
-  console.log(minBPM);
+  if (maxBPM == null || d[index] <= maxBPM){
+    return "#000000";
+  }
+
   //Checking indices before this index
   for (var i = index; i > 0 && d[i] > minBPM; i--){
     if (Math.abs(d[i] - d[i-1]) <= 2 && d[i] > maxBPM){
@@ -304,36 +303,28 @@ function heatmapColor(d, index, minBPM, maxBPM){
     }
   }
 
+
   //Deciding color based on concentration
   switch(concentration){
     case 0:
       return "#000000";
-      break;
     case 1:
       return "#0019FF";
-      break;
     case 2:
       return "#007DFF";
-      break;
     case 3:
       return "#00D2FF";
-      break;
     case 4:
       return "#00FF3F";
-      break;
     case 5:
       return "#9FFF00";
-      break;
     case 6:
       return "#6BFF00";
-      break;
     case 7:
       return "#FF8000";
-      break;
     case 8:
     default:
       return "#FF0000";
-      break;
   }
 }
 

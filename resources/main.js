@@ -7,9 +7,10 @@ var DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
-var previousData;
-var previousType;
-var previousDataTime;
+var previousData; //used to GoBack
+var currentData; //used to update current plot
+var currentType;
+var currentDataTime;
 
 var margin = {top: 50, right: 50, bottom: 100, left: 50},
 width = window.innerWidth*.95 - margin.left - margin.right,
@@ -99,12 +100,25 @@ function CreateDomain(data){
   };
 }
 
-function UpdateBPMRange(type){
-  d3.selectAll(".maxBPMLine").remove(); //delete maxBPMLine
-  d3.selectAll(".minBPMLine").remove(); //delete minBPMLine
-  d3.selectAll(".moderateActivityRange").remove(); //delete moderateActivityRange
+function UpdateBPMRange(data, dataTime, type){
+  d3.selectAll("svg").remove(); //delete current box plots
+
+  //setting maxBPM and minBPM
+  if (document.getElementById("restingFilter").checked == true){ //resting max
+      chart.maxBPM(100);
+  } else { //active max
+      var maxActiveBPM = 208-.7*age;
+      chart.maxBPM(maxActiveBPM);
+  }
+
+  if (arguments.length < 3){
+    CreatePlot(currentData, currentDataTime, currentType);
+  } else {
+    CreatePlot(data, dataTime, type);
+  }
+
   if (type == null){
-    type = previousType;
+    type = currentType;
   }
 
   // the y-axis
@@ -114,31 +128,25 @@ function UpdateBPMRange(type){
 
 
   //adding lines for the max and min BPM
-  var maxBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
+  var maxBPMLine = type == 'b' ? d3.select(".box").select("g") : d3.select(".scatter").select("g");
   if (document.getElementById("restingFilter").checked == true){ //resting max
-      chart.maxBPM(100);
-
       maxBPMLine.append("line")
       .attr("class", "maxBPMLine")
       .style("stroke", "red")
-      .attr("x1", margin.left)
-      .attr("y1", y(maxBPM) + margin.top)
-      .attr("x2", width + margin.right)
-      .attr("y2", y(maxBPM) + margin.top);
+      .attr("x1", 0)
+      .attr("y1", y(maxBPM))
+      .attr("x2", width)
+      .attr("y2", y(maxBPM));
   }
   else { //active max
     var maxActiveBPM = 208-.7*age;
-    //console.log(maxActiveBPM);
-
-    chart.maxBPM(maxActiveBPM);
-
     maxBPMLine.append("line")
     .attr("class", "maxBPMLine")
     .style("stroke", "red")
-    .attr("x1", margin.left)
-    .attr("y1", y(maxActiveBPM) + margin.top)
-    .attr("x2", width + margin.right)
-    .attr("y2", y(maxActiveBPM) + margin.top);
+    .attr("x1", 0)
+    .attr("y1", y(maxActiveBPM))
+    .attr("x2", width)
+    .attr("y2", y(maxActiveBPM));
 
     var moderateActivityRange = maxBPMLine;
     moderateActivityRange.append("rect")
@@ -146,20 +154,20 @@ function UpdateBPMRange(type){
     .style("stroke", "red")
     .style("fill", "red")
     .style("opacity", .3)
-    .attr("x", margin.left)
-    .attr("y", y(.5*maxActiveBPM) + margin.top)
+    .attr("x", 0)
+    .attr("y", y(.69*maxActiveBPM))
     .attr("width", width)
-    .attr("height", y(.5*maxActiveBPM) - (y(.69*maxActiveBPM) + margin.top));
+    .attr("height", y(.5*maxActiveBPM) - y(.69*maxActiveBPM));
   }
 
-  var minBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
+  var minBPMLine = type == 'b' ? d3.select(".box").select("g") : d3.select(".scatter").select("g");
     minBPMLine.append("line")
     .attr("class", "minBPMLine")
     .style("stroke", "blue")
-    .attr("x1", margin.left)
-    .attr("y1", y(minBPM) + margin.top)
-    .attr("x2", width + margin.right)
-    .attr("y2", y(minBPM) + margin.top);
+    .attr("x1", 0)
+    .attr("y1", y(minBPM))
+    .attr("x2", width)
+    .attr("y2", y(minBPM));
 }
 
 function CreatePlot(data, dataTime, type){
@@ -169,14 +177,19 @@ function CreatePlot(data, dataTime, type){
     extendScreen = data.length >= 6 ? (data.length) * 20 : 0;
   }
   else if (data[0][0].match(/\//g || []).length == 1){ //month, year
-    extendScreen = data.length >= 6 ? (data.length) * 40 : (data.length) * 30;
+    extendScreen = 200;
   }
   else if (data[0][0].match(/\//g || []).length == 2){ //month, day year
-    extendScreen = data.length >= 15 ? (data.length) * 110 : (data.length) * 100;
+    extendScreen = 1000;
   }
   else { //time
-    extendScreen = data.length >= 50 ? (data.length) * 85 : (data.length) * 50;
+    extendScreen = 2000;
   }
+
+  currentData = JSON.parse(JSON.stringify(data));
+  currentType = type;
+  currentDataTime = JSON.parse(JSON.stringify(dataTime));
+
   d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
   d3.select(".box").style("width", window.innerWidth + extendScreen + "px");
   width = window.innerWidth*.95 - margin.left - margin.right + extendScreen; //to compensate for screen size changes
@@ -199,7 +212,7 @@ function CreatePlot(data, dataTime, type){
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   }
 
-  UpdateBPMRange(type);
+  //UpdateBPMRange(type);
 
   // the x-axis
   var x = CreateDomain(data);
@@ -226,7 +239,7 @@ function CreatePlot(data, dataTime, type){
       .enter().append("g")
       .attr("transform", function(d) { return "translate(" +  x(d[0])  + "," + 0 + ")"; } )
         .call(chart.width(x.rangeBand()))
-      .on("click", Update);
+      .on("click", ZoomIn);
   }
   else if (type == 's'){ //draw the scatter plots
     //readjusting the x-axis
@@ -275,7 +288,7 @@ function CreatePlot(data, dataTime, type){
         .enter().append("g")
         .attr("transform", function(d) { return "translate(" +  offset  + "," + 0 + ")"; } )
           .call(chartScatter.width(x.rangeBand()))
-        .on("click", Update);
+        .on("click", ZoomIn);
     });
   }
 
@@ -303,12 +316,14 @@ function CreatePlot(data, dataTime, type){
         .style("text-anchor", "middle")
         .style("font-size", "16px")
         .text(domainTitle[domainType]);
-
-    previousType = type;
 }
 
 function GoToHome(){
+  //resetting to the starting page
   d3.selectAll("svg").remove(); //delete current box plots
+  chart.maxBPM(null);
+  chart.minBPM(null);
+
 
   d3.csv("data/hassan-HR-data.csv", function(error, csv) {
     if (error) throw error;
@@ -343,26 +358,16 @@ function GoToHome(){
 
       data[index].push(heartRate);
       dataTime[index].push(time);
-
-      //Changing mins and maxes when needed
-      if (heartRate > max){
-        max = heartRate;
-      }
-      if (heartRate < min){
-        min = heartRate;
-      }
     });
 
-    chart.domain([min, max]);
     previousData = null;
-    previousDataTime = null;
 
     domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
     CreatePlot(data, dataTime, 'b');
   });
 }
 
-function Update(d){
+function ZoomIn(d){
   d3.csv("data/hassan-HR-data.csv", function(error, csv) {
     if (error) throw error;
 
@@ -375,7 +380,7 @@ function Update(d){
     var index = 0;
     var filterIndex;
 
-    if (d['date'].match(/\//g || []) == null){ //year
+    if (d == null || d['date'].match(/\//g || []) == null){ //year
       domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
       filterIndex = 0;
     }
@@ -387,8 +392,6 @@ function Update(d){
       domainType = 2; //0 = year, 1 = month, 2 = day, 3 = time
       filterIndex = 2;
     }
-
-    d3.selectAll("svg").remove(); //delete current box plots
 
     var dateInput;
     var inRange = false;
@@ -438,36 +441,37 @@ function Update(d){
         data[index].push(heartRate);
         dataTime[index].push(time);
       }
-
-      //Changing mins and maxes when needed
-      if (heartRate > max){
-        max = heartRate;
-      }
-      if (heartRate < min){
-        min = heartRate;
-      }
     });
-    chart.domain([min, max]);
-    chartScatter.domain([min,max]);
-    previousData = d;
-    previousDataTime = dataTime;
 
-    //width =  window.innerWidth/data.length;
+    previousData = d;
+
     if (filterIndex == 2){
-      CreatePlot(data, dataTime, 's');
+      if (d3.selectAll(".minBPMLine").empty() == false){
+        UpdateBPMRange(data, dataTime, 's');
+
+      } else {
+        d3.selectAll("svg").remove(); //delete current box plots
+        CreatePlot(data, dataTime, 's');
+      }
     }
     else {
-      CreatePlot(data, dataTime, 'b');
+      if (d3.selectAll(".minBPMLine").empty() == false){
+        UpdateBPMRange(data, dataTime, 'b');
+      } else {
+        d3.selectAll("svg").remove(); //delete current box plots
+        CreatePlot(data, dataTime, 'b');
+      }
     }
   });
 }
 
-function GoBack(){
+function ZoomOut(){
   d = previousData;
 
   if (d == null){
     return;
   }
+
   d3.csv("data/hassan-HR-data.csv", function(error, csv) {
     if (error) throw error;
 
@@ -494,8 +498,6 @@ function GoBack(){
       domainType = 2; //0 = year, 1 = month, 2 = day, 3 = time
       d['date'] = d['date'].substring(0, d['date'].indexOf('/') + 1) + d['date'].substring(d['date'].length-4, d['date'].length); //month, year
     }
-
-    d3.selectAll("svg").remove(); //delete current box plots
 
     var dateInput;
     var inRange = false;
@@ -542,17 +544,14 @@ function GoBack(){
         data[index].push(heartRate);
         dataTime[index].push(time);
       }
-
-      //Changing mins and maxes when needed
-      if (heartRate > max){
-        max = heartRate;
-      }
-      if (heartRate < min){
-        min = heartRate;
-      }
     });
 
-    CreatePlot(data, dataTime, 'b');
+    if (d3.selectAll(".minBPMLine").empty() == false){
+      UpdateBPMRange(data, dataTime, 'b');
+    } else {
+      d3.selectAll("svg").remove(); //delete current box plots
+      CreatePlot(data, dataTime, 'b');
+    }
   });
 }
 
