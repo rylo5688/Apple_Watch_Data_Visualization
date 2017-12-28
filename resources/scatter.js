@@ -6,7 +6,9 @@ d3.scatter = function() {
       duration = 0,
       domain = null,
       value = Number,
-      showLabels = false;
+      showLabels = false,
+      min = 0,
+      max = 0;
 
   function scatter(g) {
       g.each(function(d, i) {

@@ -9,6 +9,8 @@ var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am
 
 var previousData;
 var previousType;
+var previousDataTime;
+
 var margin = {top: 50, right: 50, bottom: 100, left: 50},
 width = window.innerWidth*.95 - margin.left - margin.right,
 height = window.innerHeight * 0.7;
@@ -114,6 +116,8 @@ function UpdateBPMRange(type){
   //adding lines for the max and min BPM
   var maxBPMLine = type == 'b' ? d3.select(".box") : d3.select(".scatter");
   if (document.getElementById("restingFilter").checked == true){ //resting max
+      chart.maxBPM(100);
+
       maxBPMLine.append("line")
       .attr("class", "maxBPMLine")
       .style("stroke", "red")
@@ -124,7 +128,10 @@ function UpdateBPMRange(type){
   }
   else { //active max
     var maxActiveBPM = 208-.7*age;
-    console.log(maxActiveBPM);
+    //console.log(maxActiveBPM);
+
+    chart.maxBPM(maxActiveBPM);
+
     maxBPMLine.append("line")
     .attr("class", "maxBPMLine")
     .style("stroke", "red")
@@ -155,7 +162,7 @@ function UpdateBPMRange(type){
     .attr("y2", y(minBPM) + margin.top);
 }
 
-function CreatePlot(data, type){
+function CreatePlot(data, dataTime, type){
   //rescaling
   var extendScreen = 0;
   if (data[0][0].match(/\//g || []) == null){ //year
@@ -176,9 +183,6 @@ function CreatePlot(data, type){
 
   if (type == 'b'){ //box plot
     //create box plots based off of the max bpms
-    chart.maxBPM(maxBPM);
-    chart.minBPM(minBPM);
-
     var svg = d3.select("body").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
@@ -194,6 +198,8 @@ function CreatePlot(data, type){
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   }
+
+  UpdateBPMRange(type);
 
   // the x-axis
   var x = CreateDomain(data);
@@ -213,6 +219,8 @@ function CreatePlot(data, type){
     .orient("left");
 
   if (type == 'b'){ //draw the box plots
+    chart.dataTime(dataTime);
+
     svg.selectAll(".box")
         .data(data)
       .enter().append("g")
@@ -223,7 +231,7 @@ function CreatePlot(data, type){
   else if (type == 's'){ //draw the scatter plots
     //readjusting the x-axis
     x = CreateDomain(data);
-    //console.log(width)
+
     xAxis = d3.svg.axis()
       .scale(x)
       .orient("bottom");
@@ -271,8 +279,6 @@ function CreatePlot(data, type){
     });
   }
 
-  UpdateBPMRange(type);
-
   //draw y axis
   svg.append("g")
         .attr("class", "y-axis")
@@ -307,7 +313,8 @@ function GoToHome(){
   d3.csv("data/hassan-HR-data.csv", function(error, csv) {
     if (error) throw error;
 
-    var d = [];
+    var data = [];
+    var dataTime = [];
     var dateArr;
     var year;
     var month;
@@ -323,16 +330,19 @@ function GoToHome(){
       month = dateArr[1].toString();
       day = dateArr[2].toString();
 
-      if (d[index] == null){
-        d[index] = [year];
+      if (data[index] == null){
+        data[index] = [year];
+        dataTime[index] = [year];
       }
 
-      if (d[index][0] != year){
+      if (data[index][0] != year){
         index++;
-        d[index] = [year];
+        data[index] = [year];
+        dataTime[index] = [year];
       }
 
-      d[index].push(heartRate);
+      data[index].push(heartRate);
+      dataTime[index].push(time);
 
       //Changing mins and maxes when needed
       if (heartRate > max){
@@ -345,9 +355,10 @@ function GoToHome(){
 
     chart.domain([min, max]);
     previousData = null;
+    previousDataTime = null;
 
     domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
-    CreatePlot(d, 'b');
+    CreatePlot(data, dataTime, 'b');
   });
 }
 
@@ -356,6 +367,7 @@ function Update(d){
     if (error) throw error;
 
     var data = [];
+    var dataTime = [];
     var dateArr;
     var year;
     var month;
@@ -412,16 +424,19 @@ function Update(d){
       if (inRange && data[index] == null){
         data[index] = [];
         data[index] = [dateInput];
+        dataTime[index] = [dateInput];
 
       }
 
       if (inRange && data[index][0] != dateInput){
         index++;
         data[index] = [dateInput];
+        dataTime[index] = [dateInput];
       }
 
       if (inRange){
         data[index].push(heartRate);
+        dataTime[index].push(time);
       }
 
       //Changing mins and maxes when needed
@@ -435,13 +450,14 @@ function Update(d){
     chart.domain([min, max]);
     chartScatter.domain([min,max]);
     previousData = d;
+    previousDataTime = dataTime;
 
     //width =  window.innerWidth/data.length;
     if (filterIndex == 2){
-      CreatePlot(data, 's');
+      CreatePlot(data, dataTime, 's');
     }
     else {
-      CreatePlot(data, 'b');
+      CreatePlot(data, dataTime, 'b');
     }
   });
 }
@@ -456,6 +472,7 @@ function GoBack(){
     if (error) throw error;
 
     var data = [];
+    var dataTime = [];
     var dateArr;
     var year;
     var month;
@@ -511,16 +528,19 @@ function GoBack(){
       if (inRange && data[index] == null){
         data[index] = [];
         data[index] = [dateInput];
+        dataTime[index] = [dateInput];
 
       }
 
       if (inRange && data[index][0] != dateInput){
         index++;
         data[index] = [dateInput];
+        dataTime[index] = [dateInput];
       }
 
       if (inRange){
         data[index].push(heartRate);
+        dataTime[index].push(time);
       }
 
       //Changing mins and maxes when needed
@@ -532,7 +552,7 @@ function GoBack(){
       }
     });
 
-    CreatePlot(data, 'b');
+    CreatePlot(data, dataTime, 'b');
   });
 }
 
