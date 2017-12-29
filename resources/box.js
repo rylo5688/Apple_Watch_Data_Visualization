@@ -7,28 +7,46 @@
 d3.box = function() {
   var width = 1,
       height = 1,
-      duration = 0,
+      duration = 250,
       domain = null,
       value = Number,
       whiskers = boxWhiskers,
       quartiles = boxQuartiles,
       showLabels = true,
       tickFormat = null,
+      dataTime = null,
 
       //THESE ARE TEMPORARY FOR RESTING
-      minBPM = 60;
-      maxBPM = 100;
+      minBPM = null,
+      maxBPM = null;
 
   // For each small multiple…
   function box(g) {
-    //console.log(g);
     g.each(function(d, i) {
       var date = d[0];
 
       d.splice(0, 1);
+
       d['date'] = date;
 
-      d = d.map(value).sort(d3.ascending);
+      var timeArray = null;
+
+      for (var i = 0; i < dataTime.length; i++){
+        if (dataTime[i][0] == date){
+          timeArray = dataTime[i];
+        }
+      }
+
+      if (timeArray == null){
+        console.log("Data array does not match the time array");
+        return;
+      }
+      else {
+        timeArray.splice(0, 1);
+      }
+
+      //We need our own sort so we can put the data in ascending order while changing the matching indexes of the time array
+      quicksort(d, timeArray, 0, d.length-1);
 
       var g = d3.select(this),
           n = d.length,
@@ -46,6 +64,8 @@ d3.box = function() {
 
       //All data outside of the whiskers are outliers
       var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
+
+      outlierIndices = validOutliers(d, timeArray, outlierIndices, date);
 
       //y-axis scale
       var y0 = d3.scale.linear()
@@ -65,12 +85,12 @@ d3.box = function() {
           .attr("class", "center")
           .attr("x1", width / 2)
           .attr("x2", width / 2)
-          .style("opacity", 1e-6)
+          .attr("y1", function(d) { return y0(d[0]); })
+          .attr("y2", function(d) { return y0(d[1]); })
+          .style("opacity", 0)
         .transition()
           .duration(duration)
-          .style("opacity", 1)
-          .attr("y1", function(d) { return y0(d[0]); })
-          .attr("y2", function(d) { return y0(d[1]); });
+          .style("opacity", 1);
 
       //Creating the box for the box plot
       var box = g.selectAll("rect.box")
@@ -79,13 +99,13 @@ d3.box = function() {
       box.enter().append("rect")
           .attr("class", "box")
           .attr("x", 0)
-          .attr("y", function(d) { return x0(d[2]); })
+          .attr("y", function(d) { return y0(d[2]); })
           .attr("width", width)
-          .attr("height", function(d) { return x0(d[0]) - x0(d[2]); })
+          .attr("height", function(d) { return y0(d[0]) - y0(d[2]); })
+          .style("opacity", 0)
         .transition()
           .duration(duration)
-          .attr("y", function(d) { return y0(d[2]); })
-          .attr("height", function(d) { return y0(d[0]) - y0(d[2]); });
+          .style("opacity", 1);
 
       //Creating the median line for the box plots
       var medianLine = g.selectAll("line.median")
@@ -95,10 +115,12 @@ d3.box = function() {
           .attr("class", "median")
           .attr("x1", 0)
           .attr("x2", width)
+          .attr("y1", y0)
+          .attr("y2", y0)
+          .style("opacity", 0)
         .transition()
           .duration(duration)
-          .attr("y1", y0)
-          .attr("y2", y0);
+          .style("opacity", 1);
 
       //Creating the whiskers for the box plots
       var whisker = g.selectAll("line.whisker")
@@ -107,14 +129,12 @@ d3.box = function() {
       whisker.enter().insert("line", "circle, text")
           .attr("class", "whisker")
           .attr("x1", 0)
-          .attr("y1", x0)
           .attr("x2", 0 + width)
-          .attr("y2", x0)
-          .style("opacity", 1e-6)
-        .transition()
-          .duration(duration)
           .attr("y1", y0)
           .attr("y2", y0)
+          .style("opacity", 0)
+        .transition()
+          .duration(duration)
           .style("opacity", 1);
 
       //Adding the outlier dots to the box plots
@@ -123,14 +143,16 @@ d3.box = function() {
 
       outlier.enter().insert("circle", "text")
           .attr("class", "outlier")
-          .attr("r", 1)
+          .attr("r", 3)
           .attr("cx", width / 2)
-          .attr("cy", function(i) { return x0(d[i]); })
+          .attr("cy", function(i) { return y0(d[i]); })
           .style("fill", function (i){ return heatmapColor(d, i, minBPM, maxBPM); })
           .style("stroke", function (i){ return heatmapColor(d, i, minBPM, maxBPM); })
+          .style("opacity", 0)
         .transition()
-          .duration(duration)
-          .attr("cy", function(i) { return y0(d[i]); });
+          .duration(2*duration)
+          .attr("r", 1)
+          .style("opacity", 1);
 
       var format = y0.tickFormat(8);
 
@@ -144,12 +166,13 @@ d3.box = function() {
             .attr("dy", ".3em")
             .attr("dx", function(d, i) { return i & 1 ? 6 : -6 })
             .attr("x", function(d, i) { return i & 1 ? width : 0 })
-            .attr("y", x0)
+            .attr("y", y0)
             .attr("text-anchor", function(d, i) { return i & 1 ? "start" : "end"; })
             .text(format)
+            .style("opacity", 0)
           .transition()
             .duration(duration)
-            .attr("y", y0);
+            .style("opacity", 1);
       }
 
       //Adding values next to the end of the whiskers
@@ -162,12 +185,11 @@ d3.box = function() {
             .attr("dy", ".3em")
             .attr("dx", 6)
             .attr("x", width)
-            .attr("y", x0)
+            .attr("y", y0)
             .text(format)
-            .style("opacity", 1e-6)
+            .style("opacity", 0)
           .transition()
             .duration(duration)
-            .attr("y", y0)
             .style("opacity", 1);
       }
     })
@@ -223,15 +245,22 @@ d3.box = function() {
     return box;
   };
 
+  box.dataTime = function(x) {
+    if (!arguments.length) return dataTime;
+    dataTime = x;
+    return box;
+  }
+
   box.minBPM = function(x) {
-    if (!arguments.lengt) return min;
-    min = x;
+    if (!arguments.length) return minBPM;
+    minBPM = x;
     return box;
   }
 
   box.maxBPM = function(x) {
-    if (!arguments.lengt) return max;
-    max = x;
+    console.log("test: " + x);
+    if (!arguments.length) return maxBPM;
+    maxBPM = x;
     return box;
   }
 
@@ -253,9 +282,13 @@ function boxQuartiles(d) {
 function heatmapColor(d, index, minBPM, maxBPM){
   var concentration = 0;
 
+  if (maxBPM == null || d[index] <= maxBPM){
+    return "#000000";
+  }
+
   //Checking indices before this index
   for (var i = index; i > 0 && d[i] > minBPM; i--){
-    if (Math.abs(d[i] - d[i-1]) <= 2){
+    if (Math.abs(d[i] - d[i-1]) <= 2 && d[i] > maxBPM){
       concentration++;
     }
     else{
@@ -265,7 +298,7 @@ function heatmapColor(d, index, minBPM, maxBPM){
 
   //Checking indices after this index
   for (var i = index; i < d.length && d[i] < maxBPM; i++){
-    if (Math.abs(d[i] - d[i+1]) <= 2){
+    if (Math.abs(d[i] - d[i+1]) <= 2 && d[i] > maxBPM){
       concentration++;
     }
     else{
@@ -273,35 +306,133 @@ function heatmapColor(d, index, minBPM, maxBPM){
     }
   }
 
+
   //Deciding color based on concentration
   switch(concentration){
     case 0:
+      return "#000000";
     case 1:
       return "#0019FF";
-      break;
     case 2:
       return "#007DFF";
-      break;
     case 3:
       return "#00D2FF";
-      break;
     case 4:
       return "#00FF3F";
-      break;
     case 5:
       return "#9FFF00";
-      break;
     case 6:
       return "#6BFF00";
-      break;
     case 7:
       return "#FF8000";
-      break;
     case 8:
     default:
       return "#FF0000";
-      break;
   }
+}
+
+function partition(data, timeArray, low, high){
+  var pivot = data[high];
+  var i = low - 1;
+  var temp;
+
+  for (var j = low; j <= high-1; j++){
+    if (data[j] <= pivot){
+      i++;
+
+      temp = data[i];
+      data[i] = data[j];
+      data[j] = temp;
+
+      temp = timeArray[i];
+      timeArray[i] = timeArray[j];
+      timeArray[j] = temp;
+    }
+  }
+  temp = data[i + 1];
+  data[i + 1] = data[high];
+  data[high] = temp;
+
+  temp = timeArray[i + 1];
+  timeArray[i + 1] = timeArray[high];
+  timeArray[high] = temp;
+
+  return i + 1;
+}
+
+function quicksort(data, timeArray, i, j){
+  if (i < j){
+    var partitionIndex = partition(data, timeArray, i, j);
+    quicksort(data, timeArray, i, partitionIndex-1);
+    quicksort(data, timeArray, partitionIndex+1, j)
+  }
+}
+
+//Returns array: [hour, time]
+function parseTime(time){
+  var arr = [];
+  var index = time.indexOf(':');
+  arr.push(parseInt(time.substring(0, index)));
+  time = time.substring(index+1, time.length);
+
+  index = time.indexOf(':');
+  arr.push(parseInt(time.substring(0, index)));
+
+  return arr;
+}
+
+function validOutliers(data, timeArray, indices, date){
+  var index1, index2, index3, min1, min2, min3;
+
+  var valid = [];
+  for (var i = 1; i < indices.length-1; i++){
+    index1 = indices[i-1];
+    index2 = indices[i];
+    index3 = indices[i+1];
+
+    time1 = parseTime(timeArray[index1]);
+    time2 = parseTime(timeArray[index2]);
+    time3 = parseTime(timeArray[index3]);
+
+    //rule 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
+    //Then they are considered valid
+    if (Math.abs(data[index1] - data[index2]) <= 5 && Math.abs(data[index2] - data[index3]) <= 5 && Math.abs(data[index3] - data[index1]) <= 5){
+      if (time1[0] == time2[0] && time2[0] == time3[0]){
+        if (Math.abs(time1[1] - time2[1]) <= 2 && Math.abs(time2[1] - time3[1]) <= 2 && Math.abs(time3[1] - time1[1]) <=2){
+          valid.push(index1);
+          valid.push(index2);
+          valid.push(index3);
+
+          i+=2;
+          continue;
+        }
+      }
+    }
+
+    //rule 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
+    if (time1[0] == time2[0]){
+      if (Math.abs(data[index1] - data[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
+        valid.push(index1);
+        valid.push(index2);
+
+        i++;
+        continue;
+      }
+    }
+
+    //rule 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
+    if (data[index2] >= 100){ //false positive
+      if (Math.abs(data[index1] - data[index2]) >= 15 && Math.abs(data[index2] - data[index3]) >= 15){
+        if (time1[0] == time2[0] && time2[0] == time3[0]){
+          if (Math.abs(time1[1] - time2[1]) <= 1 && Math.abs(time2[1] - time3[1]) <= 1 && Math.abs(time3[1] - time1[1]) <=1 ){
+            continue;
+          }
+        }
+      }
+    }
+  }
+
+  return valid;
 }
 
 })();

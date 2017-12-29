@@ -9,7 +9,17 @@ h1{
 #title{
   position: fixed;
   left: 50%;
-  margin-left: -200px;
+  margin-left: -250px;
+}
+
+.headers {
+  float: top;
+  margin-bottom: 15px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: auto;
+  width: window.width;
+  text-align: center;
+  overflow-x: scroll;
 }
 
 .triangle-back {
@@ -20,15 +30,14 @@ h1{
 	border-bottom: 50px solid transparent;
   float: left;
   position: fixed;
+  left: 2%
 }
 
 .data{
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  margin: auto;
   width: window.width;
   padding:15px;
   text-align: center;
-  overflow-x: scroll;
 }
 
 .x-axis {
@@ -78,5 +87,5 @@ div.triangle-back:hover{
 
 .filters{
   position: fixed;
-  right: 5%;
+  right: 2%;
 }

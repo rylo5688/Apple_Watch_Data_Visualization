@@ -3,10 +3,12 @@
 d3.scatter = function() {
   var width = 1,
       height = 1,
-      duration = 0,
+      duration = 250,
       domain = null,
       value = Number,
-      showLabels = false;
+      showLabels = false,
+      min = 0,
+      max = 0;
 
   function scatter(g) {
       g.each(function(d, i) {
@@ -30,16 +32,24 @@ d3.scatter = function() {
 
           dot.enter().insert("circle", "text")
               .attr("class", "scatter-dot")
-              .attr("r", 1.5)
+              .attr("r", 3.5)
               .attr("cx", width/2)
-              .attr("cy", x0(d))
-              .style("opacity", 1e-10)
+              .attr("cy", y0(d))
+              .style("opacity", 0)
             .transition()
               .duration(duration)
-              .attr("cy", y0(d))
+              .attr("r", 1.5)
               .style("opacity", 1);
       })
     }
+
+    scatter.duration = function(x){
+      if (!arguments.length){
+        return duration;
+      }
+      duration = x;
+      return scatter;
+    };
 
     scatter.width = function(x){
       if (!arguments.length){
