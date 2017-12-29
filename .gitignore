@@ -1,0 +1,7 @@
+
+# Exclude data
+data/
+*.csv
+*.xlsx
+*.firebaserc
+firebase.json
