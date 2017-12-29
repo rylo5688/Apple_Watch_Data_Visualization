@@ -246,7 +246,7 @@ function CreatePlot(data, dataTime, type){
         .attr("class", "y-axis")
         .call(yAxis)
     .append("text") // and text1
-      .attr("transform", "translate( -50 ," + height/2 + ")rotate(-90)")
+      .attr("transform", "translate( -45 ," + height/2 + ")rotate(-90)")
       //.attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "middle")
@@ -260,7 +260,7 @@ function CreatePlot(data, dataTime, type){
         .attr("transform", "translate(" + width + ")")
         .call(yAxis)
       .append("text") // and text1
-        .attr("transform", "translate( 50 ," + height/2 + ")rotate(90)")
+        .attr("transform", "translate( 45 ," + height/2 + ")rotate(90)")
         //.attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "middle")
