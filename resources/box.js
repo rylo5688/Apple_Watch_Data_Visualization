@@ -65,7 +65,7 @@ d3.box = function() {
       //All data outside of the whiskers are outliers
       var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
 
-      outlierIndices = validOutliers(d, timeArray, outlierIndices, date);
+      //outlierIndices = validOutliers(d, timeArray, outlierIndices, date);
 
       //y-axis scale
       var y0 = d3.scale.linear()
@@ -310,7 +310,7 @@ function heatmapColor(d, index, minBPM, maxBPM){
   //Deciding color based on concentration
   switch(concentration){
     case 0:
-      return "#000000";
+      return "#0000FF";
     case 1:
       return "#0019FF";
     case 2:

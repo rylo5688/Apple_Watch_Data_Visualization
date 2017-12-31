@@ -1,9 +1,51 @@
 h1{
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  margin: auto;
-  width: 40%;
-  padding:10px;
+  margin: 0;
   text-align: center;
+  padding-top: 15px;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  text-align: center;
+  background-color: white;
+}
+
+ul input {
+  float: left;
+  width: 40px;
+}
+
+ul img {
+  float: right;
+  height: 40px;
+  width: 40px;
+}
+
+ul li {
+  float: center;
+}
+
+li {
+  display: inline-block;
+}
+
+li a {
+  display: block;
+  border: 3px solid #F98F86;
+  border-radius: 4px;
+  color: #F98F86;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+li a:hover{
+  background-color: #FEECEB;
+  border-color: #F43423;
 }
 
 #title{
@@ -14,7 +56,6 @@ h1{
 
 .headers {
   float: top;
-  margin-bottom: 15px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   margin: auto;
   text-align: center;
@@ -35,6 +76,7 @@ h1{
 .data{
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding:15px;
+  padding-top: 0px;
   text-align: center;
 }
 
@@ -76,7 +118,6 @@ h1{
 .box .center {
   stroke-dasharray: 3,3;
 }
-
 
 div.triangle-back:hover{
   border-top: 0px solid #7FFFD4;

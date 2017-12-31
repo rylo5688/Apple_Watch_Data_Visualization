@@ -56,6 +56,11 @@ function ParseDate(date){
   return mmddyy;
 }
 
+//returns Date object from a string
+function GetDate(date){
+  var arr = ParseDate(date);
+}
+
 function CreateDomain(data){
   var arr = [];
   switch (domainType){
@@ -388,6 +393,7 @@ function GoToHome(){
       time = x.time,
       heartRate = Math.floor(x.heart_rate);
 
+
       dateArr = ParseDate(date);
       year = '20' + dateArr[0].toString();
       month = dateArr[1].toString();
@@ -473,6 +479,7 @@ function ZoomIn(d){
       inRange = (format == d['date']);
 
       if (inRange && data[index] == null){
+        var test = new Date();
         data[index] = [];
         data[index] = [dateInput];
         dataTime[index] = [dateInput];
