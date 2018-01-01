@@ -128,3 +128,9 @@ div.triangle-back:hover{
   position: fixed;
   right: 2%;
 }
+
+.arrows{
+  font: 30px "Helvetica Neue";
+  text-anchor: middle;
+  font-weight: bold;
+}

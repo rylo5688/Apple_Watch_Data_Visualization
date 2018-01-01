@@ -3,8 +3,10 @@
 //GLOBALS
 var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
 'September', 'October', 'November', 'December'];
+var MONTHSHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
+'Sep', 'Oct', 'Nov', 'Dec'];
+var MONTHDAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-// /var DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
@@ -22,7 +24,7 @@ var min = Infinity,
 max = -Infinity;
 
 var domainType = 0; //0 = year, 1 = month, 2 = week, 3 = day
-var domainTitle = ['Year', 'Month', 'Day', 'Time'];
+var domainTitle = ['Year', 'Month', 'Week', 'Day'];
 
 var maxBPM = 100;
 var minBPM = 60;
@@ -122,42 +124,37 @@ function createDomain(data){
   var arr = [];
   switch (domainType){
     case 0: //need to make this case
-      var yearStart = parseInt(data[0][0]);
-      var yearEnd = parseInt(data[data.length-1][0]);
+    for (var i = 0; i < 12; i++){
+      //arr.push(month + "/" + i + "/" + year); //NOTE: Need to fix ParseDate to accept other date formats
+      arr.push(MONTHS[i]);
+    }
 
-      for (var i = yearStart; i <= yearEnd; i++){
-        arr.push(i.toString());
+    return d3.scale.ordinal()
+      .domain(arr)
+      .rangeBands([0 , width], .9);
+    case 1: //Month
+      var month = data[0][0]['date'][1];
+
+      for (var i = 1; i <= MONTHDAYS[month-1]; i++){
+        //arr.push(month + "/" + i + "/" + year); //NOTE: Need to fix ParseDate to accept other date formats
+        arr.push(i)
       }
 
       return d3.scale.ordinal()
         .domain(arr)
-        .rangeBands([0 , width], .93);
-
-    case 1: //month
-      var date = ParseDate(data[0][0]);
-      for (var i = 1; i <= 12; i++){
-        arr.push(i.toString() + "/" + date[2]); //NOTE: Need to fix ParseDate to accept other date formats
-      }
-
-      return d3.scale.ordinal()
-        .domain(arr)
-        .rangeBands([0 , width], .93);
-
+        .rangeBands([0 , width], .9);
     case 2: //Week
       var range = getWeekRange(data[0][0]['dateStr']);
-      var dateArr;
 
       //Setting each day with a date number Ex. Sunday 1
       for (var i = 0; i < 7; i++){
-        // dateArr = parseDate(range[i]);
-        // arr.push(DAYS[i] + " " + dateArr[2]);
-        arr.push(range[i]);
+        arr.push(DAYS[i]);
+        //arr.push(range[i]);
       }
 
       return d3.scale.ordinal()
         .domain(arr)
         .rangeBands([0 , width], .93);
-
     case 3: //Day
       return d3.scale.ordinal()
                 .domain(TIME)
@@ -246,27 +243,12 @@ function createPlot(dataSubset, type, title){
     chartScatter.duration(300);
   }
 
-  //rescaling
-  var extendScreen = 0;
-  // if (dataSubset[0][0].match(/\//g || []) == null){ //year
-  //   extendScreen = data.length >= 6 ? (data.length) * 20 : 0;
-  // }
-  // else if (dataSubset[0][0].match(/\//g || []).length == 1){ //month, year
-  //   extendScreen = 200;
-  // }
-  // else if (dataSubset[0][0].match(/\//g || []).length == 2){ //month, day year
-  //   extendScreen = 1000;
-  // }
-  // else { //time
-  //   extendScreen = 2000;
-  // }
-
   currentData = JSON.parse(JSON.stringify(dataSubset));
   currentType = type;
 
   d3.select(".data").style("width", window.innerWidth);
   d3.select(".box").style("width", window.innerWidth);
-  width = window.innerWidth*.95 - margin.left - margin.right + extendScreen; //to compensate for screen size changes
+  width = window.innerWidth*.95 - margin.left - margin.right; //to compensate for screen size changes
 
   if (type == 'b'){ //box plot
     //create box plots based off of the max bpms
@@ -312,6 +294,20 @@ function createPlot(dataSubset, type, title){
     .attr("text-anchor", "middle")
     .style("font-size", "24px")
     .text(title);
+
+  //left arrow
+  svg.append("text")
+    .attr("class", "arrows")
+    .attr("x", (width/8)*3)
+    .attr("y", -15)
+    .text("<");
+
+  //right arrow
+  svg.append("text")
+    .attr("class", "arrows")
+    .attr("x", (width/8)*5)
+    .attr("y", -15)
+    .text(">");
 
   //draw left y axis
   svg.append("g")
@@ -376,13 +372,14 @@ function createPlot(dataSubset, type, title){
   //Creating the plots
   if (type == 'b'){ //box plots
     // chart.dataTime(dataTime);
-
     svg.selectAll(".box")
         .data(dataSubset)
       .enter().append("g")
-      .attr("transform", function(d) { return "translate(" +  x(d[0]['dateStr'])  + "," + 0 + ")"; } )
+      .attr("transform", function(d) { return "translate(" +  x(d['xaxis'])  + "," + 0 + ")"; } )
         .call(chart.width(x.rangeBand()))
-      .on("click", ZoomIn);
+      .on("click", function(d){
+        setScope("parse", d);
+      });
   }
   else if (type == 's'){ //scatter plot
     //readjusting the x-axis
@@ -432,8 +429,7 @@ function createPlot(dataSubset, type, title){
           .data(arr)
         .enter().append("g")
         .attr("transform", function(d) { return "translate(" +  offset  + "," + 0 + ")"; } )
-          .call(chartScatter.width(x.rangeBand()))
-        .on("click", ZoomIn);
+          .call(chartScatter.width(x.rangeBand()));
     });
   }
 }
@@ -443,7 +439,24 @@ function setScope(scope, date){
   d3.selectAll("a").style("background", "none");
 
   if (date == null){
-    date = data[data.length-1]['dateStr'];
+    date = data[0]['dateStr'];
+  }
+
+  if (scope == "parse"){
+    switch (domainType){
+      case 0:
+        scope = "m";
+        date = date[0]['dateStr'];
+        break;
+      case 1:
+        scope = "w";
+        date = date[0]['dateStr'];
+        break;
+      case 2:
+        scope = "d";
+        date = date[0]['dateStr'];
+    }
+
   }
 
   var dataSubset = [];
@@ -464,7 +477,7 @@ function setScope(scope, date){
     }
 
     var dateObj = new Date(dataSubset[0]['date'][0], dataSubset[0]['date'][1]-1, dataSubset[0]['date'][2]);
-    var title = dateObj.toDateString();
+    var title = DAYS[dateObj.getDay()] + " " + MONTHSHORT[dateObj.getMonth()] + " " + dateObj.getDate() + ", " + dateObj.getFullYear();
 
     dataSubset.reverse(); //since we started pushing from newer dates to older dates
     domainType = 3;
@@ -487,6 +500,7 @@ function setScope(scope, date){
           }
 
           dataSubset[rangeIndex].push(data[i])
+          dataSubset[rangeIndex]['xaxis'] = DAYS[rangeIndex];
         }
       }
 
@@ -507,29 +521,120 @@ function setScope(scope, date){
     }
 
     var title;
-    if (dataSubset[0][0]['date'][1] != dataSubset[0][dataSubset[0].length-1]['date'][1]){ //week is inbetween two months
+    var rangeStart = parseDate(range[0]);
+    var rangeEnd = parseDate(range[6]);
+    if (rangeStart[1] != rangeEnd[1]){ //week is inbetween two months
       if (dataSubset[0][0]['date'][1] == 12 && dataSubset[0][dataSubset[0].length-1]['date'][1] == 1){ //week is inbetween December and January
-        title = "December " + dataSubset[0][0]['date'][0] + " - " + "January " + dataSubset[0][dataSubset[0].length-1]['date'][0];
+        title = "Dec " + dataSubset[0][0]['date'][2] + ", " + dataSubset[0][0]['date'][0] + " - "
+              + "Jan " + dataSubset[0][dataSubset[0].length-1]['date'][2] + ", " + dataSubset[0][dataSubset[0].length-1]['date'][0];
       }
       else {
-        title = MONTHS[dataSubset[0][0]['date'][1] - 1] + " - " + MONTHS[dataSubset[0][dataSubset[0].length-1]['date'][1] - 1] + " " + dataSubset[0][0]['date'][0];
+        title = MONTHSHORT[rangeStart[1] - 1] + " " + rangeStart[2] + " - "
+              + MONTHSHORT[rangeEnd[1] - 1] + " " + rangeEnd[2] + ", " + dataSubset[0][0]['date'][0];
       }
     }
     else {
-      title = MONTHS[dataSubset[0][0]['date'][1] - 1] + " " + dataSubset[0][0]['date'][0];
+      title = MONTHSHORT[rangeStart[1] - 1] + " " + rangeStart[2] + " - "
+            + rangeEnd[2] + ", " + dataSubset[0][0]['date'][0];
     }
 
     domainType = 2;
     createPlot(dataSubset, 'b', title);
   }
   else if (scope == 'm'){
+    //highlighting the week block
+    var block = d3.select("#monthBlock");
+    block.style("background", "#FEECEB");
 
+    var dateArr = parseDate(date);
+    var year = dateArr[0];
+    var month = dateArr[1];
+    var exists = false;
+
+    //getting the subset of data
+    for (var i = data.length-1; i >= 0; i--){
+      if (year > data[i]['date'][0] && month > data[i]['date'][1]){
+        break;
+      }
+
+      if (year != data[i]['date'][0]){
+        continue;
+      }
+      else {
+        if (month != data[i]['date'][1]){
+          continue;
+        }
+        else {
+          for (var j = 0; j < dataSubset.length; j++){
+            if (dataSubset[j][0]['dateStr'] == data[i]['dateStr']){
+              exists = true;
+              dataSubset[j].push(data[i])
+              dataSubset[j]['xaxis'] = data[i]['date'][2];
+            }
+          }
+
+          //New entry
+          if (exists == false){
+            dataSubset.push([data[i]]);
+            dataSubset[dataSubset.length - 1]['xaxis'] = data[i]['date'][2];
+          }
+          else {
+            exists = false;
+          }
+        }
+      }
+    }
+
+    var title = MONTHS[month-1] + " " + year;
+
+    dataSubset.reverse(); //reversing the data since we got it from descending order
+    domainType = 1;
+    createPlot(dataSubset, 'b', title);
   }
   else if (scope == 'y'){
+    //highlighting the week block
+    var block = d3.select("#yearBlock");
+    block.style("background", "#FEECEB");
 
+    var dateArr = parseDate(date);
+    var year = dateArr[0];
+
+    //getting the subset of data
+    for (var i = data.length-1; i >= 0; i--){
+      if (year > data[i]['date'][0]){
+        break;
+      }
+
+      if (year != data[i]['date'][0]){
+        continue;
+      }
+      else {
+        for (var j = 0; j < dataSubset.length; j++){
+          if (dataSubset[j][0]['date'][1] == data[i]['date'][1]){
+            exists = true;
+            dataSubset[j].push(data[i])
+            dataSubset[j]['xaxis'] = MONTHS[data[i]['date'][1] - 1];
+          }
+        }
+
+        //New entry
+        if (exists == false){
+          dataSubset.push([data[i]]);
+          dataSubset[dataSubset.length - 1]['xaxis'] = MONTHS[data[i]['date'][1] - 1];
+        }
+        else {
+          exists = false;
+        }
+      }
+    }
+
+    var title = year;
+    dataSubset.reverse(); //reversing the data since we got it from descending order
+    domainType = 0;
+    createPlot(dataSubset, 'b', title);
   }
   else {
-    console.log("error with SetScope()");
+    console.log("error with setScope()");
   }
 }
 
@@ -585,246 +690,6 @@ function loadData(fileName){
       setScope('d');
     });
   }
-}
-
-function GoToHome(){
-  //resetting to the starting page
-  d3.selectAll("svg").remove(); //delete current box plots
-  chart.maxBPM(null);
-  chart.minBPM(null);
-  d3.selectAll("#restingFilter").property("checked", false);
-  d3.selectAll("#activeFilter").property("checked", false);
-
-
-  d3.csv("data/hassan-HR-data.csv", function(error, csv) {
-    if (error) throw error;
-
-    var data = [];
-    var dataTime = [];
-    var dateArr;
-    var year;
-    var month;
-    var day;
-    var index = 0;
-    csv.forEach(function(x) {
-      var date = x.Date,
-      time = x.time,
-      heartRate = Math.floor(x.heart_rate);
-
-      dateArr = ParseDate(date);
-      year = '20' + dateArr[0].toString();
-      month = dateArr[1].toString();
-      day = dateArr[2].toString();
-
-      if (data[index] == null){
-        data[index] = [year];
-        dataTime[index] = [year];
-      }
-
-      if (data[index][0] != year){
-        index++;
-        data[index] = [year];
-        dataTime[index] = [year];
-      }
-
-      data[index].push(heartRate);
-      dataTime[index].push(time);
-    });
-
-    previousData = null;
-
-    domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
-    CreatePlot(data, dataTime, 'b');
-  });
-}
-
-function ZoomIn(d){
-  d3.csv("data/hassan-HR-data.csv", function(error, csv) {
-    if (error) throw error;
-
-    var data = [];
-    var dataTime = [];
-    var dateArr;
-    var year;
-    var month;
-    var day;
-    var index = 0;
-    var filterIndex;
-
-    if (d == null || d['date'].match(/\//g || []) == null){ //year
-      domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
-      filterIndex = 0;
-    }
-    else if (d['date'].match(/\//g || []).length == 1){ //month, year
-      domainType = 1; //0 = year, 1 = month, 2 = day, 3 = time
-      filterIndex = 1;
-    }
-    else if (d['date'].match(/\//g || []).length == 2){ //month, day, year
-      domainType = 2; //0 = year, 1 = month, 2 = day, 3 = time
-      filterIndex = 2;
-    }
-
-    var dateInput;
-    var inRange = false;
-    csv.forEach(function(x) {
-      var date = x.Date,
-      time = x.time,
-      heartRate = Math.floor(x.heart_rate);
-
-      dateArr = ParseDate(date);
-      year = '20' + dateArr[0].toString();
-      month = dateArr[1].toString();
-      day = dateArr[2].toString();
-
-      var format;
-      if (filterIndex == 0){
-        domainType = 1; //0 = year, 1 = month, 2 = day, 3 = time
-        format = year;
-        dateInput = month + '/' + year;
-      }
-      else if (filterIndex == 1){
-        domainType = 2; //0 = year, 1 = month, 2 = day, 3 = time
-        format = month + '/' + year;
-        dateInput = month + '/' + day + '/' + year;
-      }
-      else {
-        domainType = 3; //0 = year, 1 = month, 2 = day, 3 = time
-        format = month + '/' + day + '/' + year;
-        dateInput = time;
-      }
-
-      inRange = (format == d['date']);
-
-      if (inRange && data[index] == null){
-        var test = new Date();
-        data[index] = [];
-        data[index] = [dateInput];
-        dataTime[index] = [dateInput];
-
-      }
-
-      if (inRange && data[index][0] != dateInput){
-        index++;
-        data[index] = [dateInput];
-        dataTime[index] = [dateInput];
-      }
-
-      if (inRange){
-        data[index].push(heartRate);
-        dataTime[index].push(time);
-      }
-    });
-
-    previousData = d;
-
-    if (filterIndex == 2){
-      if (d3.selectAll(".minBPMLine").empty() == false){
-        UpdateBPMRange(data, dataTime, 's');
-
-      } else {
-        d3.selectAll("svg").remove(); //delete current box plots
-        CreatePlot(data, dataTime, 's');
-      }
-    }
-    else {
-      if (d3.selectAll(".minBPMLine").empty() == false){
-        UpdateBPMRange(data, dataTime, 'b');
-      } else {
-        d3.selectAll("svg").remove(); //delete current box plots
-        CreatePlot(data, dataTime, 'b');
-      }
-    }
-  });
-}
-
-function ZoomOut(){
-  d = previousData;
-
-  if (d == null){
-    return;
-  }
-
-  d3.csv("data/hassan-HR-data.csv", function(error, csv) {
-    if (error) throw error;
-
-    var data = [];
-    var dataTime = [];
-    var dateArr;
-    var year;
-    var month;
-    var day;
-    var index = 0;
-    var filterIndex;
-
-    if (d['date'].match(/\//g || []) == null){ //year
-      domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
-      filterIndex = 0;
-      d['date'] = "";
-    }
-    else if (d['date'].match(/\//g || []).length == 1){ //month, year
-      domainType = 1; //0 = year, 1 = month, 2 = day, 3 = time
-      filterIndex = 1;
-      d['date'] = d['date'].substring(d['date'].length-4, d['date'].length); //year
-    }
-    else { //day, month, year
-      domainType = 2; //0 = year, 1 = month, 2 = day, 3 = time
-      d['date'] = d['date'].substring(0, d['date'].indexOf('/') + 1) + d['date'].substring(d['date'].length-4, d['date'].length); //month, year
-    }
-
-    var dateInput;
-    var inRange = false;
-    csv.forEach(function(x) {
-      var date = x.Date,
-      time = x.time,
-      heartRate = Math.floor(x.heart_rate);
-
-      dateArr = ParseDate(date);
-      year = '20' + dateArr[0].toString();
-      month = dateArr[1].toString();
-      day = dateArr[2].toString();
-
-      var format;
-      if (filterIndex == 0){
-        format = "";
-        dateInput = year;
-      }
-      else if (filterIndex == 1){
-        format = year;
-        dateInput = month + '/' + year;
-      }
-      else {
-        format = month + '/' + year;
-        dateInput = month + '/' + day + '/' + year;
-      }
-
-      inRange = (format == d['date']);
-
-      if (inRange && data[index] == null){
-        data[index] = [];
-        data[index] = [dateInput];
-        dataTime[index] = [dateInput];
-
-      }
-
-      if (inRange && data[index][0] != dateInput){
-        index++;
-        data[index] = [dateInput];
-        dataTime[index] = [dateInput];
-      }
-
-      if (inRange){
-        data[index].push(heartRate);
-        dataTime[index].push(time);
-      }
-    });
-
-    if (d3.selectAll(".minBPMLine").empty() == false){
-      UpdateBPMRange(data, dataTime, 'b');
-    } else {
-      d3.selectAll("svg").remove(); //delete current box plots
-      CreatePlot(data, dataTime, 'b');
-    }
-  });
 }
 
 // Returns a function to compute the interquartile range.

@@ -23,30 +23,10 @@ d3.box = function() {
   // For each small multiple…
   function box(g) {
     g.each(function(d, i) {
-      // // var date = d[0];
-      // //
-      // // d.splice(0, 1);
-      //
-      // //d['date'] = date;
-      //
-      // // var timeArray = null;
-      //
-      // for (var i = 0; i < dataTime.length; i++){
-      //   if (dataTime[i][0] == date){
-      //     timeArray = dataTime[i];
-      //   }
-      // }
-      //
-      // if (timeArray == null){
-      //   console.log("Data array does not match the time array");
-      //   return;
-      // }
-      // else {
-      //   timeArray.splice(0, 1);
-      // }
-      //
-      // //We need our own sort so we can put the data in ascending order while changing the matching indexes of the time array
-      //quicksort(d, timeArray, 0, d.length-1);
+
+      //We need our own sort so we can put the data in ascending order while changing the matching indexes of the time array
+      quicksort(d, 0, d.length-1);
+      var sortedCopy = d;
 
       d = d.map(value).sort(d3.ascending);
       var g = d3.select(this),
@@ -64,7 +44,7 @@ d3.box = function() {
       //All data outside of the whiskers are outliers
       var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
 
-      //outlierIndices = validOutliers(d, timeArray, outlierIndices, date);
+      outlierIndices = validOutliers(sortedCopy, outlierIndices);
 
       //y-axis scale
       var y0 = d3.scale.linear()
@@ -164,7 +144,7 @@ d3.box = function() {
             .attr("class", "box")
             .attr("dy", ".3em")
             .attr("dx", function(d, i) { return i & 1 ? 6 : -6 })
-            .attr("x", function(d, i) { return i & 1 ? width : 0 })
+            .attr("x", function(d, i) { return i & 1 ? width*.75 : width*.25 })
             .attr("y", y0)
             .attr("text-anchor", function(d, i) { return i & 1 ? "start" : "end"; })
             .text(format)
@@ -183,7 +163,7 @@ d3.box = function() {
             .attr("class", "whisker")
             .attr("dy", ".3em")
             .attr("dx", 6)
-            .attr("x", width)
+            .attr("x", width*.75)
             .attr("y", y0)
             .text(format)
             .style("opacity", 0)
@@ -257,7 +237,6 @@ d3.box = function() {
   }
 
   box.maxBPM = function(x) {
-    console.log("test: " + x);
     if (!arguments.length) return maxBPM;
     maxBPM = x;
     return box;
@@ -330,7 +309,7 @@ function heatmapColor(d, index, minBPM, maxBPM){
   }
 }
 
-function partition(data, timeArray, low, high){
+function partition(data, low, high){
   var pivot = data[high];
   var i = low - 1;
   var temp;
@@ -342,28 +321,20 @@ function partition(data, timeArray, low, high){
       temp = data[i];
       data[i] = data[j];
       data[j] = temp;
-
-      temp = timeArray[i];
-      timeArray[i] = timeArray[j];
-      timeArray[j] = temp;
     }
   }
   temp = data[i + 1];
   data[i + 1] = data[high];
   data[high] = temp;
 
-  temp = timeArray[i + 1];
-  timeArray[i + 1] = timeArray[high];
-  timeArray[high] = temp;
-
   return i + 1;
 }
 
-function quicksort(data, timeArray, i, j){
+function quicksort(data, i, j){
   if (i < j){
-    var partitionIndex = partition(data, timeArray, i, j);
-    quicksort(data, timeArray, i, partitionIndex-1);
-    quicksort(data, timeArray, partitionIndex+1, j)
+    var partitionIndex = partition(data, i, j);
+    quicksort(data, i, partitionIndex-1);
+    quicksort(data, partitionIndex+1, j)
   }
 }
 
@@ -380,7 +351,7 @@ function parseTime(time){
   return arr;
 }
 
-function validOutliers(data, timeArray, indices, date){
+function validOutliers(data, indices){
   var index1, index2, index3, min1, min2, min3;
 
   var valid = [];
@@ -389,9 +360,9 @@ function validOutliers(data, timeArray, indices, date){
     index2 = indices[i];
     index3 = indices[i+1];
 
-    time1 = parseTime(timeArray[index1]);
-    time2 = parseTime(timeArray[index2]);
-    time3 = parseTime(timeArray[index3]);
+    time1 = data[index1]['time'];
+    time2 = data[index2]['time'];
+    time3 = data[index3]['time'];
 
     //rule 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
     //Then they are considered valid
