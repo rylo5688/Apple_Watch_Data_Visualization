@@ -3,7 +3,8 @@
 //GLOBALS
 var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
 'September', 'October', 'November', 'December'];
-var DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+// /var DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
@@ -20,7 +21,7 @@ height = window.innerHeight * 0.5;
 var min = Infinity,
 max = -Infinity;
 
-var domainType = 0; //0 = year, 1 = month, 2 = day, 3 = time
+var domainType = 0; //0 = year, 1 = month, 2 = week, 3 = day
 var domainTitle = ['Year', 'Month', 'Day', 'Time'];
 
 var maxBPM = 100;
@@ -88,6 +89,35 @@ function getDate(date, time){
   return new Date(Date.UTC("20" + dateArr[0], dateArr[1]-1, dateArr[2], timeArr[0], timeArr[1], timeArr[2], 0));
 }
 
+function getWeekRange(date){
+  var dateArr = parseDate(date);
+  var dateObj = new Date(dateArr[0], dateArr[1]-1, dateArr[2]);
+  var index = dateObj.getDay();
+
+  var rangeArr = new Array(7); //0 = Sunday, ... , 6 = Saturday
+  rangeArr[index] = date;
+
+  var dateStr;
+  dateObj.setDate(dateObj.getDate()-index);
+  for (var i = 0; i < index; i++){
+    dateStr = (dateObj.getMonth()+1) + "/" + dateObj.getDate() + "/" + dateObj.getFullYear();
+    rangeArr[i] = dateStr;
+
+    dateObj.setDate(dateObj.getDate()+1);
+  }
+
+  dateObj.setDate(dateObj.getDate()+1);
+
+  for (var i = index+1; i < 7; i++){
+    dateStr = (dateObj.getMonth()+1) + "/" + dateObj.getDate() + "/" + dateObj.getFullYear();
+    rangeArr[i] = dateStr;
+
+    dateObj.setDate(dateObj.getDate()+1);
+  }
+
+  return rangeArr;
+}
+
 function createDomain(data){
   var arr = [];
   switch (domainType){
@@ -113,19 +143,22 @@ function createDomain(data){
         .domain(arr)
         .rangeBands([0 , width], .93);
 
-    case 2: //DAYS
-      var date = ParseDate(data[0][0]);
-      var totalDAYS = DAYS[date[1]-1]
+    case 2: //Week
+      var range = getWeekRange(data[0]['dateStr']);
+      var dateArr;
 
-      for (var i = 1; i <= totalDAYS; i++){
-        arr.push(date[1] + "/" + i.toString() + "/" + date[0]);
+      //Setting each day with a date number Ex. Sunday 1
+      for (var i = 0; i < 7; i++){
+        // dateArr = parseDate(range[i]);
+        // arr.push(DAYS[i] + " " + dateArr[2]);
+        arr.push(range[i]);
       }
 
       return d3.scale.ordinal()
         .domain(arr)
         .rangeBands([0 , width], .93);
 
-    case 3: //time
+    case 3: //Day
       return d3.scale.ordinal()
                 .domain(TIME)
                 .rangeBands([0 , width], .4);
@@ -343,11 +376,15 @@ function createPlot(dataSubset, type, title){
   //Creating the plots
   if (type == 'b'){ //box plots
     // chart.dataTime(dataTime);
-
+    var dataSubsetArr = [];
+    for (var i = 0; i < dataSubset.length; i++){
+      dataSubsetArr.push(dataSubset[i]);
+    }
+    console.log(dataSubsetArr);
     svg.selectAll(".box")
-        .data(dataSubset)
+        .data(dataSubsetArr)
       .enter().append("g")
-      .attr("transform", function(d) { return "translate(" +  x(d[0])  + "," + 0 + ")"; } )
+      .attr("transform", function(d) { return "translate(" +  x(d['dateStr'])  + "," + 0 + ")"; } )
         .call(chart.width(x.rangeBand()))
       .on("click", ZoomIn);
   }
@@ -407,6 +444,7 @@ function createPlot(dataSubset, type, title){
 
 function setScope(scope, date){
   d3.selectAll("svg").remove(); //delete current plots
+  d3.selectAll("a").style("background", "none");
 
   if (date == null){
     date = data[data.length-1]['dateStr'];
@@ -420,7 +458,6 @@ function setScope(scope, date){
 
     //getting the subset of data
     for (var i = data.length-1; i >= 0; i--){
-
       if (date == data[i]['dateStr']){
         dataSubset.push(data[i]);
       }
@@ -430,15 +467,50 @@ function setScope(scope, date){
       }
     }
 
-    var dateObj = new Date(dataSubset[0]['date'][0], dataSubset[0]['date'][1], dataSubset[0]['date'][2]);
+    var dateObj = new Date(dataSubset[0]['date'][0], dataSubset[0]['date'][1]-1, dataSubset[0]['date'][2]);
     var title = dateObj.toDateString();
 
-    dataSubset.reverse();
+    dataSubset.reverse(); //since we started pushing from newer dates to older dates
     domainType = 3;
     createPlot(dataSubset, 's', title);
   }
   else if (scope == 'w'){
+    //highlighting the week block
+    var block = d3.select("#weekBlock");
+    block.style("background", "#FEECEB");
 
+    var range = getWeekRange(date);
+
+    //getting the subset of data
+    var minimumDate = parseDate(range[0]);
+    for (var i = data.length-1; i >= 0; i--){
+      for (var rangeIndex = 0; rangeIndex < range.length; rangeIndex++){
+        if (range[rangeIndex] == data[i]['dateStr']){
+          dataSubset.push(data[i]);
+        }
+      }
+
+      if (data[i]['date'][2] < minimumDate[2] && data[i]['date'][1] <= minimumDate[1] && data[i]['date'][0] <= minimumDate[0]){
+        break;
+      }
+    }
+    dataSubset.reverse(); //since we started pushing from newer dates to older dates
+
+    var title;
+    if (dataSubset[0]['date'][1] != dataSubset[dataSubset.length-1]['date'][1]){ //week is inbetween two months
+      if (dataSubset[0]['date'][1] == 12 && dataSubset[dataSubset.length-1]['date'][1] == 1){ //week is inbetween December and January
+        title = "December " + dataSubset[0]['date'][0] + " - " + "January " + dataSubset[dataSubset.length-1]['date'][0];
+      }
+      else {
+        title = MONTHS[dataSubset[0]['date'][1] - 1] + " - " + MONTHS[dataSubset[dataSubset.length-1]['date'][1] - 1] + " " + dataSubset[0]['date'][0];
+      }
+    }
+    else {
+      title = MONTHS[dataSubset[0]['date'][1] - 1] + " " + dataSubset[0]['date'][0];
+    }
+
+    domainType = 2;
+    createPlot(dataSubset, 'b', title);
   }
   else if (scope == 'm'){
 

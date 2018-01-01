@@ -23,35 +23,33 @@ d3.box = function() {
   // For each small multiple…
   function box(g) {
     g.each(function(d, i) {
-      var date = d[0];
-
-      d.splice(0, 1);
-
-      d['date'] = date;
-
-      var timeArray = null;
-
-      for (var i = 0; i < dataTime.length; i++){
-        if (dataTime[i][0] == date){
-          timeArray = dataTime[i];
-        }
-      }
-
-      if (timeArray == null){
-        console.log("Data array does not match the time array");
-        return;
-      }
-      else {
-        timeArray.splice(0, 1);
-      }
-
-      //We need our own sort so we can put the data in ascending order while changing the matching indexes of the time array
-      quicksort(d, timeArray, 0, d.length-1);
+      // // var date = d[0];
+      // //
+      // // d.splice(0, 1);
+      //
+      // //d['date'] = date;
+      //
+      // // var timeArray = null;
+      //
+      // for (var i = 0; i < dataTime.length; i++){
+      //   if (dataTime[i][0] == date){
+      //     timeArray = dataTime[i];
+      //   }
+      // }
+      //
+      // if (timeArray == null){
+      //   console.log("Data array does not match the time array");
+      //   return;
+      // }
+      // else {
+      //   timeArray.splice(0, 1);
+      // }
+      //
+      // //We need our own sort so we can put the data in ascending order while changing the matching indexes of the time array
+      // quicksort(d, timeArray, 0, d.length-1);
 
       var g = d3.select(this),
-          n = d.length,
-          min = d[0],
-          max = d[n - 1];
+          n = d.length;
 
       // Compute quartiles. Must return exactly 3 elements.
       var quartileData = d.quartiles = quartiles(d);
