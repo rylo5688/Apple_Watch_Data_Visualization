@@ -144,7 +144,7 @@ function createDomain(data){
         .rangeBands([0 , width], .93);
 
     case 2: //Week
-      var range = getWeekRange(data[0]['dateStr']);
+      var range = getWeekRange(data[0][0]['dateStr']);
       var dateArr;
 
       //Setting each day with a date number Ex. Sunday 1
@@ -376,13 +376,14 @@ function createPlot(dataSubset, type, title){
   //Creating the plots
   if (type == 'b'){ //box plots
     // chart.dataTime(dataTime);
-    var dataSubsetArr = [];
-    for (var i = 0; i < dataSubset.length; i++){
-      dataSubsetArr.push(dataSubset[i]);
-    }
-    console.log(dataSubsetArr);
+    // var range = getWeekRange
+    // var dataSubsetArr = [];
+    // for (var i = 0; i < dataSubset.length; i++){
+    //   dataSubsetArr.push(dataSubset[i][0]);
+    // }
+    // console.log(dataSubsetArr);
     svg.selectAll(".box")
-        .data(dataSubsetArr)
+        .data(dataSubset)
       .enter().append("g")
       .attr("transform", function(d) { return "translate(" +  x(d['dateStr'])  + "," + 0 + ")"; } )
         .call(chart.width(x.rangeBand()))
@@ -486,7 +487,11 @@ function setScope(scope, date){
     for (var i = data.length-1; i >= 0; i--){
       for (var rangeIndex = 0; rangeIndex < range.length; rangeIndex++){
         if (range[rangeIndex] == data[i]['dateStr']){
-          dataSubset.push(data[i]);
+          if (dataSubset[rangeIndex] == null){
+            dataSubset[rangeIndex] = [];
+          }
+
+          dataSubset[rangeIndex].push(data[i])
         }
       }
 
@@ -494,19 +499,29 @@ function setScope(scope, date){
         break;
       }
     }
-    dataSubset.reverse(); //since we started pushing from newer dates to older dates
 
-    var title;
-    if (dataSubset[0]['date'][1] != dataSubset[dataSubset.length-1]['date'][1]){ //week is inbetween two months
-      if (dataSubset[0]['date'][1] == 12 && dataSubset[dataSubset.length-1]['date'][1] == 1){ //week is inbetween December and January
-        title = "December " + dataSubset[0]['date'][0] + " - " + "January " + dataSubset[dataSubset.length-1]['date'][0];
+    //reversing all elements since we started from the end of the data
+    for (var i = 0; i < dataSubset.length; i++){
+      if (dataSubset[i] == null){
+        dataSubset.splice(i, 1);
+        i--;
       }
       else {
-        title = MONTHS[dataSubset[0]['date'][1] - 1] + " - " + MONTHS[dataSubset[dataSubset.length-1]['date'][1] - 1] + " " + dataSubset[0]['date'][0];
+        dataSubset[i].reverse();
+      }
+    }
+
+    var title;
+    if (dataSubset[0][0]['date'][1] != dataSubset[0][dataSubset[0].length-1]['date'][1]){ //week is inbetween two months
+      if (dataSubset[0][0]['date'][1] == 12 && dataSubset[0][dataSubset[0].length-1]['date'][1] == 1){ //week is inbetween December and January
+        title = "December " + dataSubset[0][0]['date'][0] + " - " + "January " + dataSubset[0][dataSubset[0].length-1]['date'][0];
+      }
+      else {
+        title = MONTHS[dataSubset[0][0]['date'][1] - 1] + " - " + MONTHS[dataSubset[0][dataSubset[0].length-1]['date'][1] - 1] + " " + dataSubset[0][0]['date'][0];
       }
     }
     else {
-      title = MONTHS[dataSubset[0]['date'][1] - 1] + " " + dataSubset[0]['date'][0];
+      title = MONTHS[dataSubset[0][0]['date'][1] - 1] + " " + dataSubset[0][0]['date'][0];
     }
 
     domainType = 2;
