@@ -7,6 +7,7 @@ var DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
+var data = [];
 var previousData; //used to GoBack
 var currentData; //used to update current plot
 var currentType;
@@ -14,7 +15,7 @@ var currentDataTime;
 
 var margin = {top: 50, right: 50, bottom: 100, left: 50},
 width = window.innerWidth*.95 - margin.left - margin.right,
-height = window.innerHeight * 0.7;
+height = window.innerHeight * 0.5;
 
 var min = Infinity,
 max = -Infinity;
@@ -40,28 +41,54 @@ var chartScatter = d3.scatter()
 var index = 0;
 
 //returns an array of ['year', 'month', 'day']
-function ParseDate(date){
+function parseDate(date){
   var mmddyy = new Array();
   var i = 1;
   var index = date.indexOf('/');
   while (index != -1){
-    mmddyy[i] = date.substring(0, index);
+    mmddyy[i] = parseInt(date.substring(0, index));
     date = date.substring(index+1, date.length);
 
     index = date.indexOf('/');
     i = (i + 1) % 3; //to order the date in yy/mm/dd
   }
-  mmddyy[i] = date;
+  if (date.length != 4){ //date is not in thousands.. this is for data string issues
+    mmddyy[i] = parseInt("20" + date);
+  }
+  else {
+    mmddyy[i] = parseInt(date);
+  }
 
   return mmddyy;
 }
 
-//returns Date object from a string
-function GetDate(date){
-  var arr = ParseDate(date);
+//returns an array of ['hour', 'minute', 'second']
+function parseTime(time){
+  var hhmmss = new Array();
+  var i = 0;
+  var index = time.indexOf(':');
+  while (index != -1){
+    hhmmss[i] = parseInt(time.substring(0, index));
+    time = time.substring(index+1, time.length);
+
+    index = time.indexOf(':');
+    i++;
+  }
+  hhmmss[i] = parseInt(time);
+
+  return hhmmss;
 }
 
-function CreateDomain(data){
+//returns Date object from a string
+function getDate(date, time){
+  var dateArr = ParseDate(date);
+  var timeArr = ParseTime(time);
+
+  //NOTE: The year has to be hard coded due to the data (fix this)
+  return new Date(Date.UTC("20" + dateArr[0], dateArr[1]-1, dateArr[2], timeArr[0], timeArr[1], timeArr[2], 0));
+}
+
+function createDomain(data){
   var arr = [];
   switch (domainType){
     case 0: //need to make this case
@@ -105,7 +132,7 @@ function CreateDomain(data){
   };
 }
 
-function UpdateBPMRange(data, dataTime, type){
+function updateBPMRange(dataSubset, type){
   d3.selectAll("svg").remove(); //delete current box plots
 
   //setting maxBPM and minBPM
@@ -118,9 +145,9 @@ function UpdateBPMRange(data, dataTime, type){
   }
 
   if (arguments.length < 3){
-    CreatePlot(currentData, currentDataTime, currentType);
+    CreatePlot(currentData, currentType);
   } else {
-    CreatePlot(data, dataTime, type);
+    CreatePlot(dataSubset, type);
   }
 
   if (type == null){
@@ -176,8 +203,8 @@ function UpdateBPMRange(data, dataTime, type){
     .attr("y2", y(minBPM));
 }
 
-function CreatePlot(data, dataTime, type){
-  if (data == currentData){ //updating current plot
+function createPlot(dataSubset, type, title){
+  if (dataSubset == currentData){ //updating current plot
     chart.duration(0);
     chartScatter.duration(0);
   }
@@ -188,25 +215,24 @@ function CreatePlot(data, dataTime, type){
 
   //rescaling
   var extendScreen = 0;
-  if (data[0][0].match(/\//g || []) == null){ //year
-    extendScreen = data.length >= 6 ? (data.length) * 20 : 0;
-  }
-  else if (data[0][0].match(/\//g || []).length == 1){ //month, year
-    extendScreen = 200;
-  }
-  else if (data[0][0].match(/\//g || []).length == 2){ //month, day year
-    extendScreen = 1000;
-  }
-  else { //time
-    extendScreen = 2000;
-  }
+  // if (dataSubset[0][0].match(/\//g || []) == null){ //year
+  //   extendScreen = data.length >= 6 ? (data.length) * 20 : 0;
+  // }
+  // else if (dataSubset[0][0].match(/\//g || []).length == 1){ //month, year
+  //   extendScreen = 200;
+  // }
+  // else if (dataSubset[0][0].match(/\//g || []).length == 2){ //month, day year
+  //   extendScreen = 1000;
+  // }
+  // else { //time
+  //   extendScreen = 2000;
+  // }
 
-  currentData = JSON.parse(JSON.stringify(data));
+  currentData = JSON.parse(JSON.stringify(dataSubset));
   currentType = type;
-  currentDataTime = JSON.parse(JSON.stringify(dataTime));
 
-  d3.select(".data").style("width", window.innerWidth + extendScreen + "px");
-  d3.select(".box").style("width", window.innerWidth + extendScreen + "px");
+  d3.select(".data").style("width", window.innerWidth);
+  d3.select(".box").style("width", window.innerWidth);
   width = window.innerWidth*.95 - margin.left - margin.right + extendScreen; //to compensate for screen size changes
 
   if (type == 'b'){ //box plot
@@ -230,7 +256,7 @@ function CreatePlot(data, dataTime, type){
   //UpdateBPMRange(type);
 
   // the x-axis
-  var x = CreateDomain(data);
+  var x = createDomain(dataSubset);
 
   //console.log(width)
   var xAxis = d3.svg.axis()
@@ -245,6 +271,14 @@ function CreatePlot(data, dataTime, type){
   var yAxis = d3.svg.axis()
     .scale(y)
     .orient("left");
+
+  //draw title
+  svg.append("text")
+    .attr("x", (width/2))
+    .attr("y", -15)
+    .attr("text-anchor", "middle")
+    .style("font-size", "24px")
+    .text(title);
 
   //draw left y axis
   svg.append("g")
@@ -308,10 +342,10 @@ function CreatePlot(data, dataTime, type){
 
   //Creating the plots
   if (type == 'b'){ //box plots
-    chart.dataTime(dataTime);
+    // chart.dataTime(dataTime);
 
     svg.selectAll(".box")
-        .data(data)
+        .data(dataSubset)
       .enter().append("g")
       .attr("transform", function(d) { return "translate(" +  x(d[0])  + "," + 0 + ")"; } )
         .call(chart.width(x.rangeBand()))
@@ -319,41 +353,43 @@ function CreatePlot(data, dataTime, type){
   }
   else if (type == 's'){ //scatter plot
     //readjusting the x-axis
-    x = CreateDomain(data);
+    x = createDomain(dataSubset);
 
     xAxis = d3.svg.axis()
       .scale(x)
       .orient("bottom");
 
     var tickWidth = x("12am");
-    var meridiem = "am"; //for 12 hr clock cycle
     var lastTime = "";
     var arr;
-    var timeString;
+    var time;
     var hour;
     var minute;
     var second;
     var offset;
 
-    data.forEach(function(element){
-      arr = [element];
-      timeString = arr[0][0];
-      hour = timeString.substring(0, timeString.indexOf(':'));
+    dataSubset.forEach(function(element){
+      arr = element;
+      time = arr['time'];
+      minute = time[1];
+      second = time[2];
 
-      if (parseInt(lastTime) > parseInt(hour)){ //passed the 12 hour mark
-        meridiem = "pm";
+      if (time[0] < 12){
+        if (time[0] == 0){
+          hour = "12am";
+        }
+        else {
+          hour = time[0] + "am";
+        }
       }
-
-      lastTime = hour;
-
-      if (hour == "0"){
-        hour = "12"
+      else {
+        if (time[0] == 12){
+          hour = "12pm";
+        }
+        else {
+          hour = (time[0]-12)+"pm";
+        }
       }
-      hour = hour + meridiem; //so that the time becomes 12am, etc.
-
-      timeString = timeString.substring(timeString.indexOf(':') + 1, timeString.length);
-      minute = timeString.substring(0, timeString.indexOf(':')); //to use for getting the offset
-      second = timeString.substring(timeString.indexOf(":") + 1, timeString.length);
 
       //calculating the distance between ticks
       offset = x(hour) + parseFloat(minute)/60.0*tickWidth + parseFloat(second)/360.0*tickWidth;
@@ -365,6 +401,106 @@ function CreatePlot(data, dataTime, type){
         .attr("transform", function(d) { return "translate(" +  offset  + "," + 0 + ")"; } )
           .call(chartScatter.width(x.rangeBand()))
         .on("click", ZoomIn);
+    });
+  }
+}
+
+function setScope(scope, date){
+  d3.selectAll("svg").remove(); //delete current plots
+
+  if (date == null){
+    date = data[data.length-1]['dateStr'];
+  }
+
+  var dataSubset = [];
+  if (scope == 'd'){
+    //highlighting the day block
+    var block = d3.select("#dayBlock");
+    block.style("background", "#FEECEB");
+
+    //getting the subset of data
+    for (var i = data.length-1; i >= 0; i--){
+
+      if (date == data[i]['dateStr']){
+        dataSubset.push(data[i]);
+      }
+
+      if (date != data[i]['dateStr'] && dataSubset.length > 0){
+        break;
+      }
+    }
+
+    var dateObj = new Date(dataSubset[0]['date'][0], dataSubset[0]['date'][1], dataSubset[0]['date'][2]);
+    var title = dateObj.toDateString();
+
+    dataSubset.reverse();
+    domainType = 3;
+    createPlot(dataSubset, 's', title);
+  }
+  else if (scope == 'w'){
+
+  }
+  else if (scope == 'm'){
+
+  }
+  else if (scope == 'y'){
+
+  }
+  else {
+    console.log("error with SetScope()");
+  }
+}
+
+function loadData(fileName){
+  data = [];
+  if (fileName != null){
+    //add try/catch
+    d3.csv(fileName, function(error, csv) {
+      if (error) throw error;
+
+      var dateObj;
+      var previousDateStr = null;
+      var timeStr;
+      var index = 0;
+      var afternoon = false;
+      csv.forEach(function(x) {
+        var dateStr = x.Date,
+        timeStr = x.time,
+        heartRate = parseInt(x.heart_rate);
+
+        var dateArr = parseDate(dateStr);
+        var timeArr = parseTime(timeStr);
+
+        //Checking if the time has passed the 12 hour mark
+        if (index != 0 && dateStr == previousDateStr){
+          if (afternoon == false){
+            if (timeArr[0] < data[index-1]['time'][0]){
+              afternoon = true;
+            }
+          }
+        }
+        else {
+          afternoon = false;
+        }
+
+        //Adding 12 hours to the time since it resets to 0 in the data
+        if (afternoon == true){
+          timeArr[0] += 12;
+        }
+
+        //dateObj = GetDate(dateStr, timeStr);
+
+        data[index] = [];
+        data[index].push(heartRate);
+        data[index]['date'] = dateArr;
+        data[index]['dateStr'] = dateArr[1] + "/" + dateArr[2] + "/" + dateArr[0]; //because the year in the data is simplified
+        data[index]['time'] = timeArr;
+
+        previousDateStr = dateStr;
+        index++;
+      });
+
+      setScope('d');
     });
   }
 }
@@ -392,7 +528,6 @@ function GoToHome(){
       var date = x.Date,
       time = x.time,
       heartRate = Math.floor(x.heart_rate);
-
 
       dateArr = ParseDate(date);
       year = '20' + dateArr[0].toString();

@@ -11,13 +11,11 @@ d3.scatter = function() {
       max = 0;
 
   function scatter(g) {
+    // console.log(g);
       g.each(function(d, i) {
-          var time = d[0];
+          var time = d['time'];
 
-          d.splice(0, 1);
-          //d = d.map(value).sort(d3.ascending);
-          //console.log(time);
-          //Compute the new x-scale.
+          //y scale
           var y0 = d3.scale.linear()
               .domain([0, 200])
               .range([height + margin.top, 0]);
@@ -28,7 +26,7 @@ d3.scatter = function() {
               .range(y0.range());
 
           var dot = g.selectAll("circle.scatter")
-              .data(d);
+              .data([d]);
 
           dot.enter().insert("circle", "text")
               .attr("class", "scatter-dot")
