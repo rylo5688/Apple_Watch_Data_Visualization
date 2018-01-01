@@ -376,16 +376,11 @@ function createPlot(dataSubset, type, title){
   //Creating the plots
   if (type == 'b'){ //box plots
     // chart.dataTime(dataTime);
-    // var range = getWeekRange
-    // var dataSubsetArr = [];
-    // for (var i = 0; i < dataSubset.length; i++){
-    //   dataSubsetArr.push(dataSubset[i][0]);
-    // }
-    // console.log(dataSubsetArr);
+
     svg.selectAll(".box")
         .data(dataSubset)
       .enter().append("g")
-      .attr("transform", function(d) { return "translate(" +  x(d['dateStr'])  + "," + 0 + ")"; } )
+      .attr("transform", function(d) { return "translate(" +  x(d[0]['dateStr'])  + "," + 0 + ")"; } )
         .call(chart.width(x.rangeBand()))
       .on("click", ZoomIn);
   }
