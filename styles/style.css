@@ -1,0 +1,246 @@
+h1{
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: 0;
+  text-align: center;
+  padding-top: 15px;
+}
+
+h3{
+  font-family: sans-serif;
+  margin: 0;
+  text-align: center;
+  padding-top: 10px;
+  font-size: 24px;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  text-align: center;
+  background-color: white;
+}
+
+table {
+  margin: auto;
+}
+
+table td {
+  padding: 5px;
+}
+
+.name {
+  width: 75%;
+  margin: auto;
+  padding: 5px;
+  font-size: 12px;
+}
+
+.home {
+  display: block;
+}
+
+.account{
+  display: none;
+}
+
+.userInfo {
+  font-family: Helvetica, Arial, sans-serif;
+  width: 400px;
+  height: 450px;
+  margin: auto;
+  padding: 15px;
+  border: 1.5px solid #ccc;
+  border-radius: 4px;
+  margin-top: 5%;
+
+}
+
+.userInput {
+  width: 50%;
+  float: right;
+}
+
+.userInputDropdown {
+  width: 50%;
+  float: right;
+}
+
+.submitProfile{
+  text-align: center;
+}
+
+.submitProfileButton{
+  width: 80%;
+}
+
+.hamburger{
+  background:none;
+  position:absolute;
+  top:0;
+  left:0;
+  line-height:45px;
+  padding-right: 10px;
+  color:#999;
+  border:0;
+  font-size:1.8em;
+  font-weight:bold;
+  cursor:pointer;
+  outline:none;
+}
+
+.sideMenu{
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+}
+
+.sideMenu .menuItem {
+  padding: 22px 15px 0px 10px;
+  text-decoration: none;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  color: #818181;
+  display: block;
+  transition: 0.2s;
+}
+
+.sideMenu .menuItem:hover {
+  color: white;
+  cursor: pointer;
+}
+
+.sideMenu .closeBtn {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  margin-left: 50px;
+}
+
+#settings{
+  padding-right: 10px;
+  float: right;
+  height: 30px;
+  width: 30px;
+}
+
+ul li {
+  float: center;
+}
+
+li {
+  display: inline-block;
+}
+
+li a {
+  display: block;
+  border: 3px solid #F98F86;
+  border-radius: 4px;
+  color: #F98F86;
+  text-align: center;
+  padding: 14px 16px;
+  width: 100px;
+  text-decoration: none;
+}
+
+li a:hover{
+  border-color: #F43423;
+}
+
+#title{
+  position: fixed;
+  left: 50%;
+  margin-left: -250px;
+}
+
+.headers {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding-top: 10px;
+  padding-bottom: 5px;
+  text-align: center;
+  overflow-x: hidden;
+}
+
+.triangle-back {
+	width: 0;
+  height: 0;
+	border-top: 0px solid #555;
+  border-left: 50px solid #555;
+	border-bottom: 50px solid transparent;
+  float: left;
+  position: fixed;
+  left: 2%
+}
+
+.data{
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding:15px;
+  padding-top: 0px;
+  text-align: center;
+}
+
+.x-axis {
+  font: 12px sans-serif;
+}
+.x-axis path,
+.x-axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.y-axis {
+  position: fixed;
+  float: left;
+  font: 12px sans-serif;
+}
+.y-axis path,
+.y-axis line {
+  position: fixed;
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.box {
+  font: 10px sans-serif;
+}
+
+.box line,
+.box rect,
+.box circle {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.box .center {
+  stroke-dasharray: 3,3;
+}
+
+div.triangle-back:hover{
+  border-top: 0px solid #7FFFD4;
+  border-left: 50px solid #7FFFD4;
+}
+
+.filters{
+  position: fixed;
+  right: 2%;
+}
+
+.arrows{
+  font: 30px "Helvetica Neue";
+  text-anchor: middle;
+  font-weight: bold;
+}

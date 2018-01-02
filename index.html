@@ -1,29 +1,78 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
-    <link href="style.css" type="text/css" rel="stylesheet"/>
+    <link href="styles/style.css" type="text/css" rel="stylesheet"/>
+    <link href="styles/account.css" type="text/css" rel"stylesheet"/>
     <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script> <!-- This uses d3js Version 3, NOTE: Version 4 has changes so code will not work -->
+    <script type="text/javascript" src="scripts/box.js"></script>
+    <script type="text/javascript" src="scripts/scatter.js"></script>
+    <script type="text/javascript" src="scripts/main.js"></script>
+    <script type="text/javascript" src="scripts/menu.js"></script>
 </head>
 
+
 <body>
-<div class="headers">
-  <ul>
-    <input type="date">
-    <li><a id="dayBlock" onclick="setScope('d')">Day</a></li>
-    <li><a id="weekBlock" onclick="setScope('w')">Week</a></li>
-    <li><a id="monthBlock" onclick="setScope('m')">Month</a></li>
-    <li><a id="yearBlock" onclick="setScope('y')">Year</a></li>
-    <img src="images/cog.png" alt=""></img>
-  </ul>
+<div class="sideMenu">
+    <a href="javascript:void(0)" class="closeBtn" onclick="closeMenu()">&times;</a>
+    <a class="menuItem" onclick="openHomePage()">Home</a>
+    <a class="menuItem" onclick="openAccountPage()">Account</a>
 </div>
 
-<div class="data">
-  <script type="text/javascript" src="resources/box.js"></script>
-  <script type="text/javascript" src="resources/scatter.js"></script>
-  <script type="text/javascript" src="resources/main.js"></script>
-  <script>
-    loadData("data/hassan-HR-data.csv");
-  </script>
+<div class="home">
+  <div class="headers">
+    <ul>
+      <button class="hamburger" onclick="openMenu()">&#9776;</button>
+      <li><a id="dayBlock" onclick="setScope('d')">Day</a></li>
+      <li><a id="weekBlock" onclick="setScope('w')">Week</a></li>
+      <li><a id="monthBlock" onclick="setScope('m')">Month</a></li>
+      <li><a id="yearBlock" onclick="setScope('y')">Year</a></li>
+    </ul>
+  </div>
+
+
+  <div class="data">
+    <script>
+      loadData("data/hassan-HR-data.csv");
+    </script>
+  </div>
+</div>
+
+<div class="account">
+  <button class="hamburger" onclick="openMenu()">&#9776;</button>
+  <form id="profile-form">
+    <div class="userInfo">
+      <h3>PROFILE</h3>
+      <br>
+      <table>
+        <tr>
+          <td>First Name <input type="text" class="userInput"></input></td>
+        </tr>
+        <tr>
+          <td>Last Name <input type="text" class="userInput"></input></td>
+        </tr>
+        <tr>
+          <td>Email <input type="text" class="userInput"></input> </td>
+        </tr>
+        <tr>
+          <td>Age <input type="text" class="userInput"></input> </td>
+        </tr>
+        <tr>
+          <td>
+            Fitness Level
+            <select class="userInputDropdown">
+              <option value="notVeryActive">Not Very Active<option>
+              <option value="lightlyActive">Lightly Active<option>
+              <option value="moderatelyActive">Moderately Active<option>
+              <option value="veryActive">Very Active<option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td class="submitProfile"><button type="submit" class="submitProfileButton">Submit</button></td>
+        </tr>
+      </table>
+    </div>
+</form>
 </div>
 </body>
 </html>
