@@ -10,7 +10,8 @@ h3{
   margin: 0;
   text-align: center;
   padding-top: 10px;
-  font-size: 24px;
+  font-size: 28px;
+  text-decoration: underline;
 }
 
 ul {
@@ -41,7 +42,7 @@ table td {
   display: block;
 }
 
-.account{
+.profile{
   display: none;
 }
 
@@ -58,12 +59,19 @@ table td {
 }
 
 .userInput {
-  width: 50%;
   float: right;
+  width: 100%;
+  padding: 7px 15px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+
 }
 
 .userInputDropdown {
-  width: 50%;
+  width: 55%;
   float: right;
 }
 
@@ -73,21 +81,24 @@ table td {
 
 .submitProfileButton{
   width: 80%;
+  margin: 8px 0;
 }
 
 .hamburger{
-  background:none;
-  position:absolute;
-  top:0;
-  left:0;
-  line-height:45px;
+  background: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  line-height: 45px;
   padding-right: 10px;
-  color:#999;
-  border:0;
-  font-size:1.8em;
-  font-weight:bold;
-  cursor:pointer;
-  outline:none;
+  color: #999;
+  border: 0;
+  font-size: 1.8em;
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
+
+
 }
 
 .sideMenu{
@@ -97,19 +108,19 @@ table td {
   z-index: 1;
   top: 0;
   left: 0;
-  background-color: #111;
+  background: #111;
   overflow-x: hidden;
   transition: 0.5s;
 }
 
 .sideMenu .menuItem {
   padding: 22px 15px 0px 10px;
-  text-decoration: none;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 15px;
-  color: #818181;
+  color: #a3a3a3;
   display: block;
   transition: 0.2s;
+  vertical-align: center;
 }
 
 .sideMenu .menuItem:hover {
@@ -126,6 +137,10 @@ table td {
   color: #818181;
   display: block;
   margin-left: 50px;
+}
+
+#homeLabel {
+  background: #212121; /* FIX THIS inline issue */
 }
 
 #settings{
@@ -152,6 +167,7 @@ li a {
   padding: 14px 16px;
   width: 100px;
   text-decoration: none;
+  cursor: pointer;
 }
 
 li a:hover{
@@ -243,4 +259,5 @@ div.triangle-back:hover{
   font: 30px "Helvetica Neue";
   text-anchor: middle;
   font-weight: bold;
+  cursor: pointer;
 }

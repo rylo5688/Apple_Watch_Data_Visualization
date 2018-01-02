@@ -27,6 +27,7 @@ var domainTitle = ['Month', 'Day', 'Day', 'Time'];
 var maxBPM = 100;
 var minBPM = 60;
 var age = 40;
+var fitnessLevel = "Lightly Active";
 
 var chart = d3.box()
   .whiskers(iqr(1.5))
@@ -140,7 +141,7 @@ function createDomain(data){
 
       return d3.scale.ordinal()
         .domain(arr)
-        .rangeBands([0 , width], .9);
+        .rangeBands([0 , width], .8);
     case 2: //Week
       var range = getWeekRange(currentDate);
 

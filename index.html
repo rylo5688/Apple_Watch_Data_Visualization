@@ -14,8 +14,8 @@
 <body>
 <div class="sideMenu">
     <a href="javascript:void(0)" class="closeBtn" onclick="closeMenu()">&times;</a>
-    <a class="menuItem" onclick="openHomePage()">Home</a>
-    <a class="menuItem" onclick="openAccountPage()">Account</a>
+    <a id="homeLabel" class="menuItem" onclick="openHomePage()">Home</a>
+    <a id="profileLabel" class="menuItem" onclick="openProfilePage()">Profile</a>
 </div>
 
 <div class="home">
@@ -37,42 +37,56 @@
   </div>
 </div>
 
-<div class="account">
+<div class="profile">
   <button class="hamburger" onclick="openMenu()">&#9776;</button>
-  <form id="profile-form">
+  <form id="profile-form" method="post">
     <div class="userInfo">
-      <h3>PROFILE</h3>
+      <h3>Profile</h3>
       <br>
       <table>
         <tr>
-          <td>First Name <input type="text" class="userInput"></input></td>
+          <td>First Name <input type="text" id="firstName" class="userInput"></input></td>
         </tr>
         <tr>
-          <td>Last Name <input type="text" class="userInput"></input></td>
+          <td>Last Name <input type="text" id="lastName" class="userInput"></input></td>
         </tr>
         <tr>
-          <td>Email <input type="text" class="userInput"></input> </td>
+          <td>Email <input type="text" id="email" class="userInput"></input> </td>
         </tr>
         <tr>
-          <td>Age <input type="text" class="userInput"></input> </td>
+          <td>Age <input type="text" id="age" class="userInput"></input> </td>
         </tr>
         <tr>
           <td>
             Fitness Level
-            <select class="userInputDropdown">
-              <option value="notVeryActive">Not Very Active<option>
-              <option value="lightlyActive">Lightly Active<option>
-              <option value="moderatelyActive">Moderately Active<option>
-              <option value="veryActive">Very Active<option>
+            <select id="fitnessLevel" class="userInputDropdown">
+              <option value="" disabled selected> -- select an option -- </option>
+              <option value="notVeryActive">Not Very Active</option>
+              <option value="lightlyActive">Lightly Active</option>
+              <option value="moderatelyActive">Moderately Active</option>
+              <option value="veryActive">Very Active</option>
             </select>
           </td>
         </tr>
         <tr>
-          <td class="submitProfile"><button type="submit" class="submitProfileButton">Submit</button></td>
+
+          <td class="submitProfile"><button type="submit" class="submitProfileButton" onclick="submitClick()">Submit</button></td>
         </tr>
       </table>
     </div>
-</form>
+  </form>
 </div>
+
+<script>
+  function submitClick(){
+    <!-- add php functionality -->
+    document.getElementById("profile-form").submit();
+
+    age = document.getElementById("age").value;
+    var e = document.getElementById("fitnessLevel");
+    fitnessLevel = e.options[e.selectedIndex].text;
+  }
+</script>
+
 </body>
 </html>
