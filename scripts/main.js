@@ -7,16 +7,18 @@ var MONTHSHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
 'Sep', 'Oct', 'Nov', 'Dec'];
 var MONTHDAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
+var TIME = ['1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
 var data = [];
 var currentData;
+var currentType;
+var currentTitle;
 var currentDate;
 
 var margin = {top: 50, right: 50, bottom: 100, left: 50},
 width = window.innerWidth*.95 - margin.left - margin.right,
-height = window.innerHeight * 0.5;
+height = window.innerHeight * 0.6;
 
 var min = Infinity,
 max = -Infinity;
@@ -26,6 +28,8 @@ var domainTitle = ['Month', 'Day', 'Day', 'Time'];
 
 var maxBPM = 100;
 var minBPM = 60;
+var firstName = "Ken";
+var lastName = "A.";
 var age = 40;
 var fitnessLevel = "Lightly Active";
 
@@ -133,8 +137,13 @@ function createDomain(data){
       .rangeBands([0 , width], .9);
     case 1: //Month
       var month = parseDate(currentDate);
+      var isLeapYear = !(month[0]%4);
+      var days = MONTHDAYS[month[1]-1];
+      if (isLeapYear && month[1] == 2){
+        days = 29;
+      }
 
-      for (var i = 1; i <= MONTHDAYS[month[1]-1]; i++){
+      for (var i = 1; i <= days; i++){
         //arr.push(month + "/" + i + "/" + year); //NOTE: Need to fix ParseDate to accept other date formats
         arr.push(i)
       }
@@ -161,8 +170,10 @@ function createDomain(data){
   };
 }
 
-function updateBPMRange(dataSubset, type){
-  d3.selectAll("svg").remove(); //delete current box plots
+function updateBPMRange(type){
+  d3.selectAll(".minBPMLine").remove();
+  d3.selectAll(".maxBPMLine").remove();
+  d3.selectAll(".moderateActivityRange").remove()
 
   //setting maxBPM and minBPM
   if (d3.select("#restingFilter").property("checked") == true){ //resting max
@@ -173,11 +184,11 @@ function updateBPMRange(dataSubset, type){
       chart.maxBPM(maxActiveBPM);
   }
 
-  if (arguments.length < 3){
-    CreatePlot(currentData, currentType);
-  } else {
-    CreatePlot(dataSubset, type);
-  }
+  // if (arguments.length < 3){
+  //   createPlot(currentData, currentType, currentTitle);
+  // } else {
+  //   createPlot(dataSubset, type, title);
+  // }
 
   if (type == null){
     type = currentType;
@@ -242,8 +253,9 @@ function createPlot(dataSubset, type, title){
     chartScatter.duration(300);
   }
 
-  currentData = JSON.parse(JSON.stringify(dataSubset));
+  currentData = dataSubset;
   currentType = type;
+  currentTitle = title;
 
   d3.select(".data").style("width", window.innerWidth);
   d3.select(".box").style("width", window.innerWidth);
@@ -293,6 +305,14 @@ function createPlot(dataSubset, type, title){
     .attr("text-anchor", "middle")
     .style("font-size", "24px")
     .text(title);
+
+  //draw user information
+  svg.append("text")
+    .attr("x", (width/2))
+    .attr("y", 15)
+    .attr("text-anchor", "middle")
+    .style("font-size", "14px")
+    .text("Name: " + firstName + " " + lastName + ", Age: " + age);
 
   //left arrow
   svg.append("text")
@@ -409,7 +429,7 @@ function createPlot(dataSubset, type, title){
         .attr("class", "y-axis")
         .call(yAxis)
     .append("text") // and text1
-      .attr("transform", "translate( -45 ," + height/2 + ")rotate(-90)")
+      .attr("transform", "translate( -49 ," + height/16*9 + ")rotate(-90)")
       //.attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "middle")
@@ -423,7 +443,7 @@ function createPlot(dataSubset, type, title){
         .attr("transform", "translate(" + width + ")")
         .call(yAxis)
       .append("text") // and text1
-        .attr("transform", "translate( 45 ," + height/2 + ")rotate(90)")
+        .attr("transform", "translate( 49 ," + height/16*9 + ")rotate(90)")
         //.attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "middle")
@@ -437,7 +457,7 @@ function createPlot(dataSubset, type, title){
       .call(xAxis)
     .append("text")             // text label for the x axis
         .attr("x", (width / 2) )
-        .attr("y",  25 )
+        .attr("y",  30 )
         .attr("dy", ".71em")
         .style("text-anchor", "middle")
         .style("font-size", "16px")
@@ -467,6 +487,7 @@ function createPlot(dataSubset, type, title){
   //Creating the plots
   if (type == 'b'){ //box plots
     // chart.dataTime(dataTime);
+
     svg.selectAll(".box")
         .data(dataSubset)
       .enter().append("g")
@@ -484,7 +505,7 @@ function createPlot(dataSubset, type, title){
       .scale(x)
       .orient("bottom");
 
-    var tickWidth = x("12am");
+    var tickWidth = x("1am");
     var lastTime = "";
     var arr;
     var time;
@@ -517,7 +538,12 @@ function createPlot(dataSubset, type, title){
       }
 
       //calculating the distance between ticks
-      offset = x(hour) + parseFloat(minute)/60.0*tickWidth + parseFloat(second)/360.0*tickWidth;
+      if (hour == "12am"){
+        offset = parseFloat(minute)/60.0*tickWidth + parseFloat(second)/60.0*tickWidth;
+      }
+      else {
+        offset = x(hour) + parseFloat(minute)/60.0*tickWidth + parseFloat(second)/60.0*tickWidth;
+      }
 
       //creating scatter plot "dots"
       svg.selectAll(".scatter")
@@ -527,6 +553,8 @@ function createPlot(dataSubset, type, title){
           .call(chartScatter.width(x.rangeBand()));
     });
   }
+
+  updateBPMRange(type);
 }
 
 function setScope(scope, date){
@@ -695,6 +723,7 @@ function setScope(scope, date){
 
     var dateArr = parseDate(date);
     var year = dateArr[0];
+    var recentDate;
 
     //getting the subset of data
     for (var i = data.length-1; i >= 0; i--){
@@ -706,21 +735,13 @@ function setScope(scope, date){
         continue;
       }
       else {
-        for (var j = 0; j < dataSubset.length; j++){
-          if (dataSubset[j][0]['date'][1] == data[i]['date'][1]){
-            exists = true;
-            dataSubset[j].push(data[i])
-            dataSubset[j]['xaxis'] = MONTHS[data[i]['date'][1] - 1];
-          }
-        }
-
-        //New entry
-        if (exists == false){
+        if (dataSubset.length == 0 || dataSubset[dataSubset.length-1][0]['date'][1] != data[i]['date'][1]){
           dataSubset.push([data[i]]);
           dataSubset[dataSubset.length - 1]['xaxis'] = MONTHS[data[i]['date'][1] - 1];
         }
         else {
-          exists = false;
+          dataSubset[dataSubset.length-1].push(data[i])
+          dataSubset[dataSubset.length-1]['xaxis'] = MONTHS[data[i]['date'][1] - 1];
         }
       }
     }
@@ -748,9 +769,9 @@ function loadData(fileName){
       var index = 0;
       var afternoon = false;
       csv.forEach(function(x) {
-        var dateStr = x.Date,
+        var dateStr = x.date,
         timeStr = x.time,
-        heartRate = parseInt(x.heart_rate);
+        heartRate = parseInt(x.hr);
 
         var dateArr = parseDate(dateStr);
         var timeArr = parseTime(timeStr);
@@ -787,6 +808,15 @@ function loadData(fileName){
       setScope('d');
     });
   }
+}
+
+function submitClick(){
+  //document.getElementById("profile-form").submit();
+  age = parseInt(document.getElementById("age").value);
+  firstName = document.getElementById("firstName").value;
+  lastName = document.getElementById("lastName").value;
+  var e = document.getElementById("fitnessLevel");
+  fitnessLevel = e.options[e.selectedIndex].text;
 }
 
 // Returns a function to compute the interquartile range.

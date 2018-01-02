@@ -14,6 +14,26 @@ h3{
   text-decoration: underline;
 }
 
+h4{
+  font-family: sans-serif;
+  color: white;
+  margin: 0;
+  text-align: center;
+  padding-top: 10px;
+  font-size: 14px;
+}
+
+label {
+  display: block;
+  position: relative;
+  font-family: sans-serif;
+  color: white;
+  height: 10px;
+  text-align: center;
+  font-size: 12px;
+  padding: 5px 5px 5px 5px;
+}
+
 ul {
   list-style-type: none;
   margin: 0;
@@ -144,10 +164,23 @@ table td {
 }
 
 #settings{
-  padding-right: 10px;
-  float: right;
-  height: 30px;
-  width: 30px;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  height: 20px;
+  width: 20px;
+}
+
+.settingsMenu{
+  height: 0;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  background: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
 }
 
 ul li {
@@ -172,6 +205,7 @@ li a {
 
 li a:hover{
   border-color: #F43423;
+  color: #F43423;
 }
 
 #title{
@@ -251,10 +285,12 @@ div.triangle-back:hover{
 }
 
 .filters{
-  position: fixed;
-  right: 2%;
+  right: 5%;
 }
 
+.settingsMenu table td {
+  padding: 2px;
+}
 .arrows{
   font: 30px "Helvetica Neue";
   text-anchor: middle;
