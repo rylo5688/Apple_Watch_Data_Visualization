@@ -12,7 +12,7 @@ d3.box = function() {
       value = Number,
       whiskers = boxWhiskers,
       quartiles = boxQuartiles,
-      showLabels = true,
+      showLabels = false,
       tickFormat = null,
       dataTime = null,
 

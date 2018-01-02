@@ -40,11 +40,11 @@ li a {
   color: #F98F86;
   text-align: center;
   padding: 14px 16px;
+  width: 100px;
   text-decoration: none;
 }
 
 li a:hover{
-  background-color: #FEECEB;
   border-color: #F43423;
 }
 
@@ -55,9 +55,9 @@ li a:hover{
 }
 
 .headers {
-  float: top;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  margin: auto;
+  padding-top: 10px;
+  padding-bottom: 5px;
   text-align: center;
   overflow-x: hidden;
 }
@@ -127,4 +127,10 @@ div.triangle-back:hover{
 .filters{
   position: fixed;
   right: 2%;
+}
+
+.arrows{
+  font: 30px "Helvetica Neue";
+  text-anchor: middle;
+  font-weight: bold;
 }

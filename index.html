@@ -1,40 +1,92 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
-    <link href="style.css" type="text/css" rel="stylesheet"/>
+    <link href="styles/style.css" type="text/css" rel="stylesheet"/>
+    <link href="styles/account.css" type="text/css" rel"stylesheet"/>
     <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script> <!-- This uses d3js Version 3, NOTE: Version 4 has changes so code will not work -->
+    <script type="text/javascript" src="scripts/box.js"></script>
+    <script type="text/javascript" src="scripts/scatter.js"></script>
+    <script type="text/javascript" src="scripts/main.js"></script>
+    <script type="text/javascript" src="scripts/menu.js"></script>
 </head>
 
+
 <body>
-<div class="headers">
-  <ul>
-    <input type="date">
-    <li><a>Day</a></li>
-    <li><a>Week</a></li>
-    <li><a>Month</a></li>
-    <li><a>Year</a></li>
-    <img src="images/cog.png" alt=""></img>
-  </ul>
+<div class="sideMenu">
+    <a href="javascript:void(0)" class="closeBtn" onclick="closeMenu()">&times;</a>
+    <a id="homeLabel" class="menuItem" onclick="openHomePage()">Home</a>
+    <a id="profileLabel" class="menuItem" onclick="openProfilePage()">Profile</a>
 </div>
-<!--
-  <div class="triangle-back" onclick="ZoomOut()"></div>
-  <h1 id="title" onclick="GoToHome()">
-    hassan-HR-data
-  </h1>
-  <form class="filters">
-    <!-- Still need to add onclick functionality so the charts update --><!--
-    <input type="radio" id="restingFilter" name="filter" value="resting" onclick="UpdateBPMRange()"> Resting<br>
-    <input type="radio" id="activeFilter" name="filter" value="active" onclick="UpdateBPMRange()"> Active<br>
+
+<div class="home">
+  <div class="headers">
+    <ul>
+      <button class="hamburger" onclick="openMenu()">&#9776;</button>
+      <li><a id="dayBlock" onclick="setScope('d')">Day</a></li>
+      <li><a id="weekBlock" onclick="setScope('w')">Week</a></li>
+      <li><a id="monthBlock" onclick="setScope('m')">Month</a></li>
+      <li><a id="yearBlock" onclick="setScope('y')">Year</a></li>
+    </ul>
+  </div>
+
+
+  <div class="data">
+    <script>
+      loadData("data/hassan-HR-data.csv");
+    </script>
+  </div>
+</div>
+
+<div class="profile">
+  <button class="hamburger" onclick="openMenu()">&#9776;</button>
+  <form id="profile-form" method="post">
+    <div class="userInfo">
+      <h3>Profile</h3>
+      <br>
+      <table>
+        <tr>
+          <td>First Name <input type="text" id="firstName" class="userInput"></input></td>
+        </tr>
+        <tr>
+          <td>Last Name <input type="text" id="lastName" class="userInput"></input></td>
+        </tr>
+        <tr>
+          <td>Email <input type="text" id="email" class="userInput"></input> </td>
+        </tr>
+        <tr>
+          <td>Age <input type="text" id="age" class="userInput"></input> </td>
+        </tr>
+        <tr>
+          <td>
+            Fitness Level
+            <select id="fitnessLevel" class="userInputDropdown">
+              <option value="" disabled selected> -- select an option -- </option>
+              <option value="notVeryActive">Not Very Active</option>
+              <option value="lightlyActive">Lightly Active</option>
+              <option value="moderatelyActive">Moderately Active</option>
+              <option value="veryActive">Very Active</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+
+          <td class="submitProfile"><button type="submit" class="submitProfileButton" onclick="submitClick()">Submit</button></td>
+        </tr>
+      </table>
+    </div>
   </form>
 </div>
--->
-<div class="data">
-  <script type="text/javascript" src="resources/box.js"></script>
-  <script type="text/javascript" src="resources/scatter.js"></script>
-  <script type="text/javascript" src="resources/main.js"></script>
-  <script>
-    GoToHome();
-  </script>
-</div>
+
+<script>
+  function submitClick(){
+    <!-- add php functionality -->
+    document.getElementById("profile-form").submit();
+
+    age = document.getElementById("age").value;
+    var e = document.getElementById("fitnessLevel");
+    fitnessLevel = e.options[e.selectedIndex].text;
+  }
+</script>
+
 </body>
 </html>

@@ -11,10 +11,7 @@ var TIME = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
 var data = [];
-var previousData; //used to GoBack
-var currentData; //used to update current plot
-var currentType;
-var currentDataTime;
+var currentData;
 var currentDate;
 
 var margin = {top: 50, right: 50, bottom: 100, left: 50},
@@ -30,6 +27,7 @@ var domainTitle = ['Month', 'Day', 'Day', 'Time'];
 var maxBPM = 100;
 var minBPM = 60;
 var age = 40;
+var fitnessLevel = "Lightly Active";
 
 var chart = d3.box()
   .whiskers(iqr(1.5))
@@ -143,7 +141,7 @@ function createDomain(data){
 
       return d3.scale.ordinal()
         .domain(arr)
-        .rangeBands([0 , width], .9);
+        .rangeBands([0 , width], .8);
     case 2: //Week
       var range = getWeekRange(currentDate);
 
