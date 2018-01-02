@@ -44,7 +44,7 @@ d3.box = function() {
       //All data outside of the whiskers are outliers
       var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
 
-      outlierIndices = validOutliers(sortedCopy, outlierIndices);
+      //outlierIndices = validOutliers(sortedCopy, outlierIndices);
 
       //y-axis scale
       var y0 = d3.scale.linear()

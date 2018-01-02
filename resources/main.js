@@ -15,6 +15,7 @@ var previousData; //used to GoBack
 var currentData; //used to update current plot
 var currentType;
 var currentDataTime;
+var currentDate;
 
 var margin = {top: 50, right: 50, bottom: 100, left: 50},
 width = window.innerWidth*.95 - margin.left - margin.right,
@@ -24,7 +25,7 @@ var min = Infinity,
 max = -Infinity;
 
 var domainType = 0; //0 = year, 1 = month, 2 = week, 3 = day
-var domainTitle = ['Year', 'Month', 'Week', 'Day'];
+var domainTitle = ['Month', 'Day', 'Day', 'Time'];
 
 var maxBPM = 100;
 var minBPM = 60;
@@ -133,9 +134,9 @@ function createDomain(data){
       .domain(arr)
       .rangeBands([0 , width], .9);
     case 1: //Month
-      var month = data[0][0]['date'][1];
+      var month = parseDate(currentDate);
 
-      for (var i = 1; i <= MONTHDAYS[month-1]; i++){
+      for (var i = 1; i <= MONTHDAYS[month[1]-1]; i++){
         //arr.push(month + "/" + i + "/" + year); //NOTE: Need to fix ParseDate to accept other date formats
         arr.push(i)
       }
@@ -144,7 +145,7 @@ function createDomain(data){
         .domain(arr)
         .rangeBands([0 , width], .9);
     case 2: //Week
-      var range = getWeekRange(data[0][0]['dateStr']);
+      var range = getWeekRange(currentDate);
 
       //Setting each day with a date number Ex. Sunday 1
       for (var i = 0; i < 7; i++){
@@ -298,16 +299,112 @@ function createPlot(dataSubset, type, title){
   //left arrow
   svg.append("text")
     .attr("class", "arrows")
-    .attr("x", (width/8)*3)
+    .attr("x", (width/4)*1)
     .attr("y", -15)
-    .text("<");
+    .text("<")
+    .on("click", function(){
+      var dateArr = parseDate(currentDate);
+      var dateStr;
+      switch (domainType){
+        case 0:
+          dateStr = dateArr[1] + "/" + dateArr[2] + "/" + (dateArr[0]-1);
+          setScope("y", dateStr);
+          break;
+        case 1: //NOTE: we default to the first of the month
+          if (dateArr[1]-1 == 0){ //going back a month from January
+            dateStr = "12/1" + "/" + (dateArr[0]-1);
+          }
+          else {
+            dateStr = (dateArr[1]-1) + "/1/" + dateArr[0];
+          }
+          setScope("m", dateStr);
+          break;
+        case 2:
+          if (dateArr[1]-7 <= 0){ //going back a month
+            var offset = 7-dateArr[1];
+            if (dateArr[1]-1 == 0){ //going back a month from January
+              dateStr = "12/" + (MONTHDAYS[11]-offset) + "/" + (dateArr[0]-1);
+            }
+            else {
+              dateStr = (dateArr[1]-1) + "/" + (MONTHDAYS[dateArr[1]-1]-offset) + "/" + dateArr[0];
+            }
+          }
+          else {
+            dateStr = dateArr[1] + "/" + (dateArr[2]-7) + "/" + dateArr[0];
+          }
+          setScope("w", dateStr);
+          break;
+        case 3:
+          if (dateArr[2]-1 == 0){ //going back a month
+            if (dateArr[1]-1 == 0){ //going back a month from January
+              dateStr = "12/31/" + (dateArr[0]-1);
+            }
+            else {
+              dateStr = (dateArr[1]-1) + "/" + (MONTHDAYS[dateArr[1]-1]) + "/" + dateArr[0];
+            }
+          }
+          else {
+            dateStr = dateArr[1] + "/" + (dateArr[2]-1) + "/" + dateArr[0];
+          }
+          setScope("d", dateStr);
+          break;
+      }
+    });
 
   //right arrow
   svg.append("text")
     .attr("class", "arrows")
-    .attr("x", (width/8)*5)
+    .attr("x", (width/4)*3)
     .attr("y", -15)
-    .text(">");
+    .text(">")
+    .on("click", function(){
+      var dateArr = parseDate(currentDate);
+      var dateStr;
+      switch (domainType){
+        case 0:
+          dateStr = dateArr[1] + "/" + dateArr[2] + "/" + (dateArr[0]+1);
+          setScope("y", dateStr);
+          break;
+        case 1: //NOTE: we default to the first of the month
+          if (dateArr[1]+1 == 13){ //going forward  a month from December
+            dateStr = "1/1" + "/" + (dateArr[0]+1);
+          }
+          else {
+            dateStr = (dateArr[1]+1) + "/1/" + dateArr[0];
+          }
+          setScope("m", dateStr);
+          break;
+        case 2:
+          if (dateArr[1]+7 > MONTHDAYS[dateArr[1]-1]){ //going forward a month
+            var offset = 7-(MONTHDAYS[dateArr[1]-1] - dateArr[1]);
+            if (dateArr[1]+1 == 13){ //going back a forward from December
+              dateStr = "1/" + offset + "/" + (dateArr[0]-1);
+            }
+            else {
+              dateStr = (dateArr[1]+1) + "/" + offset + "/" + dateArr[0];
+            }
+          }
+          else {
+            dateStr = dateArr[1] + "/" + (dateArr[2]+7) + "/" + dateArr[0];
+          }
+          setScope("w", dateStr);
+          break;
+        case 3:
+          if (dateArr[1]+1 > MONTHDAYS[dateArr[1]-1]){ //going forward a month
+            if (dateArr[1]+1 == 13){ //going forward a month from December
+              dateStr = "1/1/" + (dateArr[0]+1);
+            }
+            else {
+              dateStr = (dateArr[1]+1) + "/1/" + dateArr[0];
+            }
+          }
+          else {
+            dateStr = dateArr[1] + "/" + (dateArr[2]+1) + "/" + dateArr[0];
+          }
+          setScope("d", dateStr);
+          break;
+      }
+    });
 
   //draw left y axis
   svg.append("g")
@@ -439,7 +536,7 @@ function setScope(scope, date){
   d3.selectAll("a").style("background", "none");
 
   if (date == null){
-    date = data[0]['dateStr'];
+    date = data[data.length-1]['dateStr'];
   }
 
   if (scope == "parse"){
@@ -459,6 +556,7 @@ function setScope(scope, date){
 
   }
 
+  currentDate = date;
   var dataSubset = [];
   if (scope == 'd'){
     //highlighting the day block
@@ -476,7 +574,8 @@ function setScope(scope, date){
       }
     }
 
-    var dateObj = new Date(dataSubset[0]['date'][0], dataSubset[0]['date'][1]-1, dataSubset[0]['date'][2]);
+    var dateArr = parseDate(currentDate);
+    var dateObj = new Date(dateArr[0], dateArr[1]-1, dateArr[2]);
     var title = DAYS[dateObj.getDay()] + " " + MONTHSHORT[dateObj.getMonth()] + " " + dateObj.getDate() + ", " + dateObj.getFullYear();
 
     dataSubset.reverse(); //since we started pushing from newer dates to older dates
@@ -524,18 +623,18 @@ function setScope(scope, date){
     var rangeStart = parseDate(range[0]);
     var rangeEnd = parseDate(range[6]);
     if (rangeStart[1] != rangeEnd[1]){ //week is inbetween two months
-      if (dataSubset[0][0]['date'][1] == 12 && dataSubset[0][dataSubset[0].length-1]['date'][1] == 1){ //week is inbetween December and January
-        title = "Dec " + dataSubset[0][0]['date'][2] + ", " + dataSubset[0][0]['date'][0] + " - "
-              + "Jan " + dataSubset[0][dataSubset[0].length-1]['date'][2] + ", " + dataSubset[0][dataSubset[0].length-1]['date'][0];
+      if (rangeStart[1] == 12 && rangeEnd[1] == 1){ //week is inbetween December and January
+        title = "Dec " + rangeStart[2] + ", " + rangeStart[0] + " - "
+              + "Jan " + rangeEnd[2] + ", " + rangeEnd[0];
       }
       else {
         title = MONTHSHORT[rangeStart[1] - 1] + " " + rangeStart[2] + " - "
-              + MONTHSHORT[rangeEnd[1] - 1] + " " + rangeEnd[2] + ", " + dataSubset[0][0]['date'][0];
+              + MONTHSHORT[rangeEnd[1] - 1] + " " + rangeEnd[2] + ", " + rangeEnd[0];
       }
     }
     else {
       title = MONTHSHORT[rangeStart[1] - 1] + " " + rangeStart[2] + " - "
-            + rangeEnd[2] + ", " + dataSubset[0][0]['date'][0];
+            + rangeEnd[2] + ", " + rangeEnd[0];
     }
 
     domainType = 2;
