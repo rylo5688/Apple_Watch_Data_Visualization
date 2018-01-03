@@ -28,9 +28,9 @@ var domainTitle = ['Month', 'Day', 'Day', 'Time'];
 
 var maxBPM = 100;
 var minBPM = 60;
-var firstName = "Ken";
-var lastName = "A.";
-var age = 40;
+var firstName = "Joe";
+var lastName = "";
+var age = 48;
 var fitnessLevel = "Lightly Active";
 
 var chart = d3.box()
@@ -170,28 +170,27 @@ function createDomain(data){
   };
 }
 
-function updateBPMRange(type){
+function updateBPMRange(dataSubset, type, title){
   d3.selectAll(".minBPMLine").remove();
   d3.selectAll(".maxBPMLine").remove();
   d3.selectAll(".moderateActivityRange").remove()
 
-  //setting maxBPM and minBPM
-  if (d3.select("#restingFilter").property("checked") == true){ //resting max
-      chart.maxBPM(100);
-  }
-  else if (d3.select("#activeFilter").property("checked") == true) { //active max
-      var maxActiveBPM = 208-.7*age;
-      chart.maxBPM(maxActiveBPM);
-  }
-
-  // if (arguments.length < 3){
-  //   createPlot(currentData, currentType, currentTitle);
-  // } else {
-  //   createPlot(dataSubset, type, title);
-  // }
-
   if (type == null){
     type = currentType;
+  }
+
+  if (type == "s"){
+      d3.selectAll("svg").remove(); //delete current plots
+      if (dataSubset == null){
+        createPlot(currentData, currentType, currentTitle);
+      }
+      else {
+        createPlot(dataSubset, type, title);
+      }
+  }
+
+  if (d3.select("#noneFilter").property("checked") == true){ //no filter
+    return;
   }
 
   // the y-axis
@@ -204,12 +203,12 @@ function updateBPMRange(type){
   var maxBPMLine = type == 'b' ? d3.select(".box").select("g") : d3.select(".scatter").select("g");
   if (d3.select("#restingFilter").property("checked") == true){ //resting max
       maxBPMLine.append("line")
-      .attr("class", "maxBPMLine")
-      .style("stroke", "red")
-      .attr("x1", 0)
-      .attr("y1", y(maxBPM))
-      .attr("x2", width)
-      .attr("y2", y(maxBPM));
+        .attr("class", "maxBPMLine")
+        .style("stroke", "red")
+        .attr("x1", 0)
+        .attr("y1", y(maxBPM))
+        .attr("x2", width)
+        .attr("y2", y(maxBPM));
   }
   else { //active max
     var maxActiveBPM = 208-.7*age;
@@ -244,6 +243,21 @@ function updateBPMRange(type){
 }
 
 function createPlot(dataSubset, type, title){
+  //setting maxBPM and minBPM
+  if (d3.select("#restingFilter").property("checked") == true){ //resting max
+      chart.maxBPM(100);
+      chartScatter.maxBPM(100);
+  }
+  else if (d3.select("#activeFilter").property("checked") == true) { //active max
+      var maxActiveBPM = 208-.7*age;
+      chart.maxBPM(maxActiveBPM);
+      chartScatter.maxBPM(maxActiveBPM);
+  }
+  else {
+    chart.maxBPM(Infinity);
+    chartScatter.maxBPM(Infinity);
+  }
+
   if (dataSubset == currentData){ //updating current plot
     chart.duration(0);
     chartScatter.duration(0);
@@ -279,8 +293,6 @@ function createPlot(dataSubset, type, title){
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   }
 
-  //UpdateBPMRange(type);
-
   // the x-axis
   var x = createDomain(dataSubset);
 
@@ -301,7 +313,7 @@ function createPlot(dataSubset, type, title){
   //draw title
   svg.append("text")
     .attr("x", (width/2))
-    .attr("y", -15)
+    .attr("y", -22)
     .attr("text-anchor", "middle")
     .style("font-size", "24px")
     .text(title);
@@ -309,10 +321,10 @@ function createPlot(dataSubset, type, title){
   //draw user information
   svg.append("text")
     .attr("x", (width/2))
-    .attr("y", 15)
+    .attr("y", -5)
     .attr("text-anchor", "middle")
     .style("font-size", "14px")
-    .text("Name: " + firstName + " " + lastName + ", Age: " + age);
+    .text("Name: " + firstName + ", Age: " + age);
 
   //left arrow
   svg.append("text")
@@ -496,6 +508,7 @@ function createPlot(dataSubset, type, title){
       .on("click", function(d){
         setScope("parse", d);
       });
+    updateBPMRange(data, type, title);
   }
   else if (type == 's'){ //scatter plot
     //readjusting the x-axis
@@ -505,6 +518,7 @@ function createPlot(dataSubset, type, title){
       .scale(x)
       .orient("bottom");
 
+    chartScatter.fullDataSet(dataSubset);
     var tickWidth = x("1am");
     var lastTime = "";
     var arr;
@@ -553,8 +567,6 @@ function createPlot(dataSubset, type, title){
           .call(chartScatter.width(x.rangeBand()));
     });
   }
-
-  updateBPMRange(type);
 }
 
 function setScope(scope, date){
@@ -605,8 +617,13 @@ function setScope(scope, date){
     var title = DAYS[dateObj.getDay()] + " " + MONTHSHORT[dateObj.getMonth()] + " " + dateObj.getDate() + ", " + dateObj.getFullYear();
 
     dataSubset.reverse(); //since we started pushing from newer dates to older dates
+    console.log("before");
+    console.log(dataSubset);
+    dataSubset = validOutliers(dataSubset);
+    console.log("after");
+    console.log(dataSubset);
     domainType = 3;
-    createPlot(dataSubset, 's', title);
+    updateBPMRange(dataSubset, 's', title);
   }
   else if (scope == 'w'){
     //highlighting the week block
@@ -817,6 +834,72 @@ function submitClick(){
   lastName = document.getElementById("lastName").value;
   var e = document.getElementById("fitnessLevel");
   fitnessLevel = e.options[e.selectedIndex].text;
+}
+
+function validOutliers(dataSubset){
+  // Compute quartiles. Must return exactly 3 elements.
+  var quartileData = dataSubset.quartiles = quartiles(dataSubset);
+
+  //Getting the index of the minimum and maximum values from the data for the box plots (whisker ends)
+  var whiskerIndices = whiskers.call(this, [dataSubset], 0);
+
+  //Mapping the indexes of the minimum and maximum to the data
+  var whiskerData = whiskerIndices.map(function(i) { return dataSubset[i]; });
+
+  //All data outside of the whiskers are outliers
+  var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, dataSubset.length));
+
+  var index1, index2, index3, min1, min2, min3;
+
+  var valid = [];
+  for (var i = 1; i < outlierIndices.length-1; i++){
+    index1 = outlierIndices[i-1];
+    index2 = outlierIndices[i];
+    index3 = outlierIndicies[i+1];
+
+    time1 = dataSubset[index1]['time'];
+    time2 = dataSubset[index2]['time'];
+    time3 = dataSubset[index3]['time'];
+
+    //rule 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
+    //Then they are considered valid
+    if (Math.abs(dataSubset[index1] - dataSubset[index2]) <= 5 && Math.abs(dataSubset[index2] - dataSubset[index3]) <= 5 && Math.abs(dataSubset[index3] - dataSubset[index1]) <= 5){
+      if (time1[0] == time2[0] && time2[0] == time3[0]){
+        if (Math.abs(time1[1] - time2[1]) <= 2 && Math.abs(time2[1] - time3[1]) <= 2 && Math.abs(time3[1] - time1[1]) <=2){
+          valid.push(dataSubset[index1]);
+          valid.push(dataSubset[index2]);
+          valid.push(dataSubset[index3]);
+
+          i+=2;
+          continue;
+        }
+      }
+    }
+
+    //rule 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
+    if (time1[0] == time2[0]){
+      if (Math.abs(dataSubset[index1] - dataSubset[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
+        valid.push(dataSubset[index1]);
+        valid.push(dataSubset[index2]);
+
+        i++;
+        continue;
+      }
+    }
+
+    //rule 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
+    if (dataSubset[index2] >= 100){ //false positive
+      if (Math.abs(dataSubset[index1] - dataSubset[index2]) >= 15 && Math.abs(dataSubset[index2] - dataSubset[index3]) >= 15){
+        if (time1[0] == time2[0] && time2[0] == time3[0]){
+          if (Math.abs(time1[1] - time2[1]) <= 1 && Math.abs(time2[1] - time3[1]) <= 1 && Math.abs(time3[1] - time1[1]) <=1 ){
+            continue;
+          }
+        }
+      }
+    }
+  }
+
+  return valid;
 }
 
 // Returns a function to compute the interquartile range.

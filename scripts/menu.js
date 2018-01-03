@@ -24,7 +24,7 @@ function openProfilePage(){
 
 function openSettingsMenu(){
   d3.select(".settingsMenu").style("width", "125px");
-  d3.select(".settingsMenu").style("height", "100px");
+  d3.select(".settingsMenu").style("height", "125px");
 }
 
 function closeSettingsMenu(){

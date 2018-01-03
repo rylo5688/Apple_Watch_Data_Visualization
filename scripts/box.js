@@ -23,7 +23,6 @@ d3.box = function() {
   // For each small multiple…
   function box(g) {
     g.each(function(d, i) {
-
       //We need our own sort so we can put the data in ascending order while changing the matching indexes of the time array
       quicksort(d, 0, d.length-1);
       var sortedCopy = d;
@@ -44,7 +43,7 @@ d3.box = function() {
       //All data outside of the whiskers are outliers
       var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
 
-      outlierIndices = validOutliers(sortedCopy, outlierIndices);
+      //outlierIndices = validOutliers(sortedCopy, outlierIndices);
 
       //y-axis scale
       var y0 = d3.scale.linear()
@@ -125,8 +124,7 @@ d3.box = function() {
           .attr("r", 3)
           .attr("cx", width / 2)
           .attr("cy", function(i) { return y0(d[i]); })
-          .style("fill", function (i){ return heatmapColor(d, i, minBPM, maxBPM); })
-          .style("stroke", function (i){ return heatmapColor(d, i, minBPM, maxBPM); })
+          .style("fill", function (i){ return "#000000"; })
           .style("opacity", 0)
         .transition()
           .duration(2*duration)
@@ -255,58 +253,6 @@ function boxQuartiles(d) {
     d3.quantile(d, .5),
     d3.quantile(d, .75)
   ];
-}
-
-function heatmapColor(d, index, minBPM, maxBPM){
-  var concentration = 0;
-
-  if (maxBPM == null || d[index] <= maxBPM){
-    return "#000000";
-  }
-
-  //Checking indices before this index
-  for (var i = index; i > 0 && d[i] > minBPM; i--){
-    if (Math.abs(d[i] - d[i-1]) <= 2 && d[i] > maxBPM){
-      concentration++;
-    }
-    else{
-      break;
-    }
-  }
-
-  //Checking indices after this index
-  for (var i = index; i < d.length && d[i] < maxBPM; i++){
-    if (Math.abs(d[i] - d[i+1]) <= 2 && d[i] > maxBPM){
-      concentration++;
-    }
-    else{
-      break;
-    }
-  }
-
-
-  //Deciding color based on concentration
-  switch(concentration){
-    case 0:
-      return "#0000FF";
-    case 1:
-      return "#0019FF";
-    case 2:
-      return "#007DFF";
-    case 3:
-      return "#00D2FF";
-    case 4:
-      return "#00FF3F";
-    case 5:
-      return "#9FFF00";
-    case 6:
-      return "#6BFF00";
-    case 7:
-      return "#FF8000";
-    case 8:
-    default:
-      return "#FF0000";
-  }
 }
 
 function partition(data, low, high){

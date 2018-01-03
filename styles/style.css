@@ -169,6 +169,7 @@ table td {
   right: 15px;
   height: 20px;
   width: 20px;
+  cursor: pointer;
 }
 
 .settingsMenu{
@@ -180,6 +181,7 @@ table td {
   right: 0;
   background: #111;
   overflow-x: hidden;
+  overflow-y: hidden;
   transition: 0.5s;
 }
 
@@ -292,7 +294,7 @@ div.triangle-back:hover{
   padding: 2px;
 }
 .arrows{
-  font: 30px "Helvetica Neue";
+  font: 36px "Helvetica Neue";
   text-anchor: middle;
   font-weight: bold;
   cursor: pointer;
