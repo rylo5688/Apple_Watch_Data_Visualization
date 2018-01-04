@@ -30,7 +30,7 @@ var maxBPM = 100;
 var minBPM = 60;
 var firstName = "Joe";
 var lastName = "";
-var age = 48;
+var age = 48; //48 39
 var fitnessLevel = "Lightly Active";
 
 var chart = d3.box()
@@ -208,38 +208,47 @@ function updateBPMRange(dataSubset, type, title){
         .attr("x1", 0)
         .attr("y1", y(maxBPM))
         .attr("x2", width)
-        .attr("y2", y(maxBPM));
+        .attr("y2", y(maxBPM))
+      .append("svg:title")
+        .text("Maximum healthy HR");
   }
   else { //active max
     var maxActiveBPM = 208-.7*age;
     maxBPMLine.append("line")
-    .attr("class", "maxBPMLine")
-    .style("stroke", "red")
-    .attr("x1", 0)
-    .attr("y1", y(maxActiveBPM))
-    .attr("x2", width)
-    .attr("y2", y(maxActiveBPM));
+      .attr("class", "maxBPMLine")
+      .style("stroke", "red")
+      .attr("x1", 0)
+      .attr("y1", y(maxActiveBPM))
+      .attr("x2", width)
+      .attr("y2", y(maxActiveBPM))
+    .append("svg:title")
+      .text("Maximum healthy HR");
 
     var moderateActivityRange = maxBPMLine;
     moderateActivityRange.append("rect")
-    .attr("class", "moderateActivityRange")
-    .style("stroke", "red")
-    .style("fill", "red")
-    .style("opacity", .3)
-    .attr("x", 0)
-    .attr("y", y(.69*maxActiveBPM))
-    .attr("width", width)
-    .attr("height", y(.5*maxActiveBPM) - y(.69*maxActiveBPM));
+      .attr("class", "moderateActivityRange")
+      .style("stroke", "red")
+      .style("fill", "red")
+      .style("opacity", .3)
+      .attr("x", 0)
+      .attr("y", y(.69*maxActiveBPM))
+      .attr("width", width)
+      .attr("height", y(.5*maxActiveBPM) - y(.69*maxActiveBPM))
+    .append("svg:title")
+      .text("Moderate activity HR range");
+
   }
 
   var minBPMLine = type == 'b' ? d3.select(".box").select("g") : d3.select(".scatter").select("g");
     minBPMLine.append("line")
-    .attr("class", "minBPMLine")
-    .style("stroke", "blue")
-    .attr("x1", 0)
-    .attr("y1", y(minBPM))
-    .attr("x2", width)
-    .attr("y2", y(minBPM));
+      .attr("class", "minBPMLine")
+      .style("stroke", "blue")
+      .attr("x1", 0)
+      .attr("y1", y(minBPM))
+      .attr("x2", width)
+      .attr("y2", y(minBPM))
+    .append("svg:title")
+      .text("Minimum healthy HR range");
 }
 
 function createPlot(dataSubset, type, title){
@@ -442,11 +451,10 @@ function createPlot(dataSubset, type, title){
         .call(yAxis)
     .append("text") // and text1
       .attr("transform", "translate( -49 ," + height/16*9 + ")rotate(-90)")
-      //.attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "middle")
       .style("font-size", "16px")
-      .text("Heart Rate");
+      .text("HR (bpm)");
 
   //draw right y axis
   yAxis.orient("right");
@@ -456,11 +464,19 @@ function createPlot(dataSubset, type, title){
         .call(yAxis)
       .append("text") // and text1
         .attr("transform", "translate( 49 ," + height/16*9 + ")rotate(90)")
-        //.attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "middle")
         .style("font-size", "16px")
-        .text("Heart Rate");
+        .text("HR (bpm)");
+
+  //right unit label
+  // svg.append("text")
+  //     .attr("class", "unitLabel")
+  //     .attr("transform", "translate(" + (width + 43) + "," + 10 + ")rotate(90)")
+  //     .attr("dy", ".71em")
+  //     .style("text-anchor", "middle")
+  //     .style("font-size", "12px")
+  //     .text("bpm");
 
   //draw x axis
   svg.append("g")
@@ -468,22 +484,23 @@ function createPlot(dataSubset, type, title){
       .attr("transform", "translate(0," + (height  + margin.top) + ")")
       .call(xAxis)
     .append("text")             // text label for the x axis
-        .attr("x", (width / 2) )
-        .attr("y",  30 )
-        .attr("dy", ".71em")
-        .style("text-anchor", "middle")
-        .style("font-size", "16px")
-        .text(domainTitle[domainType]);
+      .attr("x", (width / 2) )
+      .attr("y",  30 )
+      .attr("dy", ".71em")
+      .style("text-anchor", "middle")
+      .style("font-size", "16px")
+      .text(domainTitle[domainType]);
 
   //draw grid lines
   svg.append("line")
-    .attr("class", "grid")
-    .style("stroke", "black")
-    .style("opacity", 1)
-    .attr("x1", 0)
-    .attr("y1", y(200))
-    .attr("x2", width)
-    .attr("y2", y(200));
+      .attr("class", "grid")
+      .style("stroke", "black")
+      .style("opacity", 1)
+      .attr("x1", 0)
+      .attr("y1", y(200))
+      .attr("x2", width)
+      .attr("y2", y(200))
+
 
   for (i = 180; i > 0; i-=20){
     svg.append("line")
@@ -512,6 +529,23 @@ function createPlot(dataSubset, type, title){
   }
   else if (type == 's'){ //scatter plot
     //readjusting the x-axis
+    var copy = dataSubset.slice();
+    quicksort(dataSubset, 0, dataSubset.length - 1);
+
+    copy = copy.map(Number).sort(d3.ascending);
+
+    var n = copy.length;
+    //console.log(copy);
+    var quartileData = quartiles(copy);
+
+    copy['quartiles'] = quartileData;
+    var whiskerIndices = iqr(1.5)(copy, 0);
+    //console.log(whiskerIndices);
+    var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
+    console.log(outlierIndices);
+    dataSubset = validOutliers(dataSubset, outlierIndices);
+
+
     x = createDomain(dataSubset);
 
     xAxis = d3.svg.axis()
@@ -617,11 +651,6 @@ function setScope(scope, date){
     var title = DAYS[dateObj.getDay()] + " " + MONTHSHORT[dateObj.getMonth()] + " " + dateObj.getDate() + ", " + dateObj.getFullYear();
 
     dataSubset.reverse(); //since we started pushing from newer dates to older dates
-    console.log("before");
-    console.log(dataSubset);
-    dataSubset = validOutliers(dataSubset);
-    console.log("after");
-    console.log(dataSubset);
     domainType = 3;
     updateBPMRange(dataSubset, 's', title);
   }
@@ -836,39 +865,63 @@ function submitClick(){
   fitnessLevel = e.options[e.selectedIndex].text;
 }
 
-function validOutliers(dataSubset){
-  // Compute quartiles. Must return exactly 3 elements.
-  var quartileData = dataSubset.quartiles = quartiles(dataSubset);
+//Returns an array with the indices of all the outliers
+function findOutliers(d){
+  var deviation = d3.deviation(d, function(i){ return i[0]; });
+  var mean = d3.mean(d, function(i){ return i; });
+  var upperRange = mean + 2*deviation;
+  var lowerRange = mean - 2*deviation;
 
-  //Getting the index of the minimum and maximum values from the data for the box plots (whisker ends)
-  var whiskerIndices = whiskers.call(this, [dataSubset], 0);
+  var outlierIndices = [];
+  for(var i = 0; i < d.length; i++){
+    if (d[i] < lowerRange){
+      outlierIndices.push(i);
+      continue;
+    }
 
-  //Mapping the indexes of the minimum and maximum to the data
-  var whiskerData = whiskerIndices.map(function(i) { return dataSubset[i]; });
+    if (d[i] > upperRange){
+      outlierIndices.push(i);
+      continue;
+    }
+  }
+  return outlierIndices;
+}
 
-  //All data outside of the whiskers are outliers
-  var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, dataSubset.length));
+function whiskers(d) {
+  return [0, d.length - 1];
+}
 
+function quartiles(d) {
+  return [
+    d3.quantile(d, .25),
+    d3.quantile(d, .5),
+    d3.quantile(d, .75)
+  ];
+}
+
+
+//Returns new data array that discludes all invalid outliers
+function validReadings(){
   var index1, index2, index3, min1, min2, min3;
 
   var valid = [];
-  for (var i = 1; i < outlierIndices.length-1; i++){
-    index1 = outlierIndices[i-1];
-    index2 = outlierIndices[i];
-    index3 = outlierIndicies[i+1];
+  for (var i = 1; i < indices.length-1; i++){
+    index1 = indices[i-1];
+    index2 = indices[i];
+    index3 = indices[i+1];
 
-    time1 = dataSubset[index1]['time'];
-    time2 = dataSubset[index2]['time'];
-    time3 = dataSubset[index3]['time'];
+    time1 = data[index1]['time'];
+    time2 = data[index2]['time'];
+    time3 = data[index3]['time'];
 
     //rule 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
     //Then they are considered valid
-    if (Math.abs(dataSubset[index1] - dataSubset[index2]) <= 5 && Math.abs(dataSubset[index2] - dataSubset[index3]) <= 5 && Math.abs(dataSubset[index3] - dataSubset[index1]) <= 5){
+    if (Math.abs(data[index1] - data[index2]) <= 5 && Math.abs(data[index2] - data[index3]) <= 5 && Math.abs(data[index3] - data[index1]) <= 5){
       if (time1[0] == time2[0] && time2[0] == time3[0]){
         if (Math.abs(time1[1] - time2[1]) <= 2 && Math.abs(time2[1] - time3[1]) <= 2 && Math.abs(time3[1] - time1[1]) <=2){
-          valid.push(dataSubset[index1]);
-          valid.push(dataSubset[index2]);
-          valid.push(dataSubset[index3]);
+          valid.push(index1);
+          valid.push(index2);
+          valid.push(index3);
 
           i+=2;
           continue;
@@ -878,9 +931,9 @@ function validOutliers(dataSubset){
 
     //rule 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
     if (time1[0] == time2[0]){
-      if (Math.abs(dataSubset[index1] - dataSubset[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
-        valid.push(dataSubset[index1]);
-        valid.push(dataSubset[index2]);
+      if (Math.abs(data[index1] - data[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
+        valid.push(index1);
+        valid.push(index2);
 
         i++;
         continue;
@@ -888,8 +941,8 @@ function validOutliers(dataSubset){
     }
 
     //rule 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
-    if (dataSubset[index2] >= 100){ //false positive
-      if (Math.abs(dataSubset[index1] - dataSubset[index2]) >= 15 && Math.abs(dataSubset[index2] - dataSubset[index3]) >= 15){
+    if (data[index2] >= 100){ //false positive
+      if (Math.abs(data[index1] - data[index2]) >= 15 && Math.abs(data[index2] - data[index3]) >= 15){
         if (time1[0] == time2[0] && time2[0] == time3[0]){
           if (Math.abs(time1[1] - time2[1]) <= 1 && Math.abs(time2[1] - time3[1]) <= 1 && Math.abs(time3[1] - time1[1]) <=1 ){
             continue;
@@ -902,11 +955,110 @@ function validOutliers(dataSubset){
   return valid;
 }
 
-// Returns a function to compute the interquartile range.
-function iqr(k) {
+function partition(data, low, high){
+  var pivot = data[high];
+  var i = low - 1;
+  var temp;
+
+  for (var j = low; j <= high-1; j++){
+    if (data[j] <= pivot){
+      i++;
+
+      temp = data[i];
+      data[i] = data[j];
+      data[j] = temp;
+    }
+  }
+  temp = data[i + 1];
+  data[i + 1] = data[high];
+  data[high] = temp;
+
+  return i + 1;
+}
+
+function quicksort(dataSubset, i, j){
+  if (i < j){
+    var partitionIndex = partition(dataSubset, i, j);
+    quicksort(dataSubset, i, partitionIndex-1);
+    quicksort(dataSubset, partitionIndex+1, j)
+  }
+}
+
+function validOutliers(dataSubset, indices){
+  var index1, index2, index3, min1, min2, min3;
+
+  var valid = [];
+  var invalid = [];
+  for (var i = 1; i < indices.length-1; i++){
+    index1 = indices[i-1];
+    index2 = indices[i];
+    index3 = indices[i+1];
+
+    time1 = dataSubset[index1]['time'];
+    time2 = dataSubset[index2]['time'];
+    time3 = dataSubset[index3]['time'];
+
+    //rule 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
+    //Then they are considered valid
+    if (Math.abs(dataSubset[index1] - dataSubset[index2]) <= 5 && Math.abs(dataSubset[index2] - dataSubset[index3]) <= 5 && Math.abs(dataSubset[index3] - dataSubset[index1]) <= 5){
+      if (time1[0] == time2[0] && time2[0] == time3[0]){
+        if (Math.abs(time1[1] - time2[1]) <= 2 && Math.abs(time2[1] - time3[1]) <= 2 && Math.abs(time3[1] - time1[1]) <=2){
+          valid.push(index1);
+          valid.push(index2);
+          valid.push(index3);
+
+          i+=2;
+          continue;
+        }
+      }
+    }
+
+    //rule 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
+    if (time1[0] == time2[0]){
+      if (Math.abs(dataSubset[index1] - dataSubset[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
+        valid.push(index1);
+        valid.push(index2);
+
+        i++;
+        continue;
+      }
+    }
+
+    //rule 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
+    if (dataSubset[index2] >= 100){ //false positive
+      if (Math.abs(dataSubset[index1] - dataSubset[index2]) >= 15 && Math.abs(dataSubset[index2] - dataSubset[index3]) >= 15){
+        if (time1[0] == time2[0] && time2[0] == time3[0]){
+          if (Math.abs(time1[1] - time2[1]) <= 1 && Math.abs(time2[1] - time3[1]) <= 1 && Math.abs(time3[1] - time1[1]) <=1 ){
+            invalid.push(index2);
+            continue;
+          }
+        }
+      }
+    }
+
+    invalid.push(index2);
+  }
+
+  console.log(valid);
+  var deleted = 0;
+  for (var i = 0; i < indices.length; i++){
+    for (var j = 0; j < valid.length; j++){
+      if (indices[i] != valid[j]){
+        dataSubset.splice(indices[i]-deleted,1);
+        console.log("deleted");
+        deleted++;
+      }
+    }
+  }
+
+  return dataSubset;
+}
+
+// Returns a function to compute the interquartile range. (k should be 1.5)
+function iqr(k, d, i) {
   return function(d, i) {
-    var q1 = d.quartiles[0],
-    q3 = d.quartiles[2],
+    var q1 = d['quartiles'][0],
+    q3 = d['quartiles'][2],
     iqr = (q3 - q1) * k,
     i = -1,
     j = d.length;

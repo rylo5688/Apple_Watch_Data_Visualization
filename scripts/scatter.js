@@ -16,6 +16,8 @@ d3.scatter = function() {
     g.each(function(d, i) {
         var time = d['time'];
 
+
+
         //y scale
         var y0 = d3.scale.linear()
             .domain([0, 200])
@@ -34,26 +36,25 @@ d3.scatter = function() {
             .attr("r", 3.5)
             .attr("cx", width/2)
             .attr("cy", y0(d))
+            .attr("z", 2)
             .style("fill", function (i){ return heatmapColor(fullDataSet, index, minBPM, maxBPM); })
             .style("stroke", function (i){ return heatmapColor(fullDataSet, index, minBPM, maxBPM); })
             .style("opacity", 0)
           .transition()
             .duration(duration)
-            .attr("r", 1)
+            .attr("r", 1.5)
             .style("opacity", 1);
 
-        dot.on("mouseover", function(){
-          this.attr("class", "whisker")
-            .attr("dy", ".3em")
-            .attr("dx", 6)
-            .attr("x", width*.75)
-            .attr("y", y0)
-            .text(format)
-            .style("opacity", 0)
-          .transition()
-            .duration(duration)
-            .style("opacity", 1);
-        });
+        dot.append("svg:title")
+          .text(d);
+
+        //NEED to implement better mouseover
+        // var format = d;
+        // dot.on("mouseover", function(){
+        //   console.log(y0(d));
+        //   dot.append("svg:title")
+        //     .text(d);
+        // });
 
         index++;
     })
