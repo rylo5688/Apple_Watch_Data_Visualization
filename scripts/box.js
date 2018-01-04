@@ -32,18 +32,17 @@ d3.box = function() {
           n = d.length;
 
       // Compute quartiles. Must return exactly 3 elements.
-      var quartileData = d.quartiles = quartiles(d);
+      var quartileData = d['quartiles'] = quartiles(d);
 
-      //Getting the index of the minimum and maximum values from the data for the box plots (whisker ends)
-
+      //Getting the index of the minimum and maximum values from the data for the box plots (whisker ends that are calculated with iqr(1.5))
       var whiskerIndices = whiskers.call(this, d, i);
-      //console.log(whiskerIndices);
+
       //Mapping the indexes of the minimum and maximum to the data
       var whiskerData = whiskerIndices.map(function(i) { return d[i]; });
 
       //All data outside of the whiskers are outliers
       var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
-      console.log(outlierIndices);
+
       outlierIndices = validOutliers(sortedCopy, outlierIndices);
 
       //y-axis scale
@@ -296,73 +295,6 @@ function parseTime(time){
   arr.push(parseInt(time.substring(0, index)));
 
   return arr;
-}
-
-function validOutliers(data, indices){
-  var index1, index2, index3, min1, min2, min3;
-
-  var valid = [];
-  for (var i = 0; i < indices.length; i++){
-    if (i == 0){ //edge case
-      index1 = indices[i-2];
-      index2 = indices[i-1];
-      index3 = indices[i];
-
-      time1 = data[index1]['time'];
-      time2 = data[index2]['time'];
-      time3 = data[index3]['time'];
-
-
-    }
-    else if (i == indices.length-1){ //edge case
-
-    }
-    else {
-    index1 = indices[i-1];
-    index2 = indices[i];
-    index3 = indices[i+1];
-
-    time1 = data[index1]['time'];
-    time2 = data[index2]['time'];
-    time3 = data[index3]['time'];
-
-    //rule 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
-    //Then they are considered valid
-    if (Math.abs(data[index1] - data[index2]) <= 5 && Math.abs(data[index2] - data[index3]) <= 5 && Math.abs(data[index3] - data[index1]) <= 5){
-      if (time1[0] == time2[0] && time2[0] == time3[0]){
-        if (Math.abs(time1[1] - time2[1]) <= 2 && Math.abs(time2[1] - time3[1]) <= 2 && Math.abs(time3[1] - time1[1]) <=2){
-          valid.push(index2);
-
-          i+=2;
-          continue;
-        }
-      }
-    }
-
-    //rule 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
-    if (time1[0] == time2[0]){
-      if (Math.abs(data[index1] - data[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
-        valid.push(index2);
-
-        i++;
-        continue;
-      }
-    }
-
-    //rule 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
-    if (data[index2] >= 100){ //false positive
-      if (Math.abs(data[index1] - data[index2]) >= 15 && Math.abs(data[index2] - data[index3]) >= 15){
-        if (time1[0] == time2[0] && time2[0] == time3[0]){
-          if (Math.abs(time1[1] - time2[1]) <= 1 && Math.abs(time2[1] - time3[1]) <= 1 && Math.abs(time3[1] - time1[1]) <=1 ){
-            continue;
-          }
-        }
-      }
-    }
-    }
-  }
-
-  return valid;
 }
 
 })();

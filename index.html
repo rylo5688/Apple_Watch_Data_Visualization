@@ -5,6 +5,7 @@
     <link href="styles/account.css" type="text/css" rel"stylesheet"/>
     <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script> <!-- This uses d3js Version 3, NOTE: Version 4 has changes so code will not work -->
     <script src="https://code.jquery.com/jquery-2.2.1.js"></script>
+    <script type="text/javascript" src="scripts/functions.js"></script>
     <script type="text/javascript" src="scripts/box.js"></script>
     <script type="text/javascript" src="scripts/scatter.js"></script>
     <script type="text/javascript" src="scripts/main.js"></script>
@@ -42,10 +43,10 @@
   <div class="headers">
     <ul>
       <button class="hamburger" onclick="openMenu()">&#9776;</button>
-      <li><a id="dayBlock" onclick="setScope('d')">Day</a></li>
-      <li><a id="weekBlock" onclick="setScope('w')">Week</a></li>
-      <li><a id="monthBlock" onclick="setScope('m')">Month</a></li>
-      <li><a id="yearBlock" onclick="setScope('y')">Year</a></li>
+      <li><a id="dayBlock" onclick="setScope('d', currentDate)">Day</a></li>
+      <li><a id="weekBlock" onclick="setScope('w', currentDate)">Week</a></li>
+      <li><a id="monthBlock" onclick="setScope('m', currentDate)">Month</a></li>
+      <li><a id="yearBlock" onclick="setScope('y', currentDate)">Year</a></li>
       <img id="settings" src="images/cog.png" onclick="openSettingsMenu()"></img>
     </ul>
   </div>

@@ -305,7 +305,6 @@ function createPlot(dataSubset, type, title){
   // the x-axis
   var x = createDomain(dataSubset);
 
-  //console.log(width)
   var xAxis = d3.svg.axis()
     .scale(x)
     .orient("bottom");
@@ -529,22 +528,18 @@ function createPlot(dataSubset, type, title){
   }
   else if (type == 's'){ //scatter plot
     //readjusting the x-axis
-    var copy = dataSubset.slice();
     quicksort(dataSubset, 0, dataSubset.length - 1);
 
-    copy = copy.map(Number).sort(d3.ascending);
+    var quartileData = dataSubset['quartiles'] = quartiles(dataSubset);
+    var n = dataSubset.length;
 
-    var n = copy.length;
-    //console.log(copy);
-    var quartileData = quartiles(copy);
+    var whiskerIndices = iqr(1.5)(dataSubset, 0);
 
-    copy['quartiles'] = quartileData;
-    var whiskerIndices = iqr(1.5)(copy, 0);
-    //console.log(whiskerIndices);
     var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
-    console.log(outlierIndices);
-    dataSubset = validOutliers(dataSubset, outlierIndices);
+    var fullOutlierIndices = outlierIndices.slice();
+    outlierIndices = validOutliers(dataSubset, outlierIndices);
 
+    removeInvalidOutlier(dataSubset, fullOutlierIndices, outlierIndices);
 
     x = createDomain(dataSubset);
 
@@ -982,88 +977,4 @@ function quicksort(dataSubset, i, j){
     quicksort(dataSubset, i, partitionIndex-1);
     quicksort(dataSubset, partitionIndex+1, j)
   }
-}
-
-function validOutliers(dataSubset, indices){
-  var index1, index2, index3, min1, min2, min3;
-
-  var valid = [];
-  var invalid = [];
-  for (var i = 1; i < indices.length-1; i++){
-    index1 = indices[i-1];
-    index2 = indices[i];
-    index3 = indices[i+1];
-
-    time1 = dataSubset[index1]['time'];
-    time2 = dataSubset[index2]['time'];
-    time3 = dataSubset[index3]['time'];
-
-    //rule 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
-    //Then they are considered valid
-    if (Math.abs(dataSubset[index1] - dataSubset[index2]) <= 5 && Math.abs(dataSubset[index2] - dataSubset[index3]) <= 5 && Math.abs(dataSubset[index3] - dataSubset[index1]) <= 5){
-      if (time1[0] == time2[0] && time2[0] == time3[0]){
-        if (Math.abs(time1[1] - time2[1]) <= 2 && Math.abs(time2[1] - time3[1]) <= 2 && Math.abs(time3[1] - time1[1]) <=2){
-          valid.push(index1);
-          valid.push(index2);
-          valid.push(index3);
-
-          i+=2;
-          continue;
-        }
-      }
-    }
-
-    //rule 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
-    if (time1[0] == time2[0]){
-      if (Math.abs(dataSubset[index1] - dataSubset[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
-        valid.push(index1);
-        valid.push(index2);
-
-        i++;
-        continue;
-      }
-    }
-
-    //rule 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
-    if (dataSubset[index2] >= 100){ //false positive
-      if (Math.abs(dataSubset[index1] - dataSubset[index2]) >= 15 && Math.abs(dataSubset[index2] - dataSubset[index3]) >= 15){
-        if (time1[0] == time2[0] && time2[0] == time3[0]){
-          if (Math.abs(time1[1] - time2[1]) <= 1 && Math.abs(time2[1] - time3[1]) <= 1 && Math.abs(time3[1] - time1[1]) <=1 ){
-            invalid.push(index2);
-            continue;
-          }
-        }
-      }
-    }
-
-    invalid.push(index2);
-  }
-
-  console.log(valid);
-  var deleted = 0;
-  for (var i = 0; i < indices.length; i++){
-    for (var j = 0; j < valid.length; j++){
-      if (indices[i] != valid[j]){
-        dataSubset.splice(indices[i]-deleted,1);
-        console.log("deleted");
-        deleted++;
-      }
-    }
-  }
-
-  return dataSubset;
-}
-
-// Returns a function to compute the interquartile range. (k should be 1.5)
-function iqr(k, d, i) {
-  return function(d, i) {
-    var q1 = d['quartiles'][0],
-    q3 = d['quartiles'][2],
-    iqr = (q3 - q1) * k,
-    i = -1,
-    j = d.length;
-    while (d[++i] < q1 - iqr);
-    while (d[--j] > q3 + iqr);
-    return [i, j];
-  };
 }
