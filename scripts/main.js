@@ -28,9 +28,9 @@ var domainTitle = ['Month', 'Day', 'Day', 'Time'];
 
 var maxBPM = 100;
 var minBPM = 60;
-var firstName = "Joe";
+var firstName = "Jane";
 var lastName = "";
-var age = 48; //48 39
+var age = 39; //48 39
 var fitnessLevel = "Lightly Active";
 
 var chart = d3.box()
@@ -528,19 +528,26 @@ function createPlot(dataSubset, type, title){
   }
   else if (type == 's'){ //scatter plot
     //readjusting the x-axis
+    var dataSubsetUnsorted = dataSubset.slice();
     quicksort(dataSubset, 0, dataSubset.length - 1);
+    var sorted = dataSubset;
 
-    var quartileData = dataSubset['quartiles'] = quartiles(dataSubset);
-    var n = dataSubset.length;
+    //calculating the outliers and removing and invalid ones
+    var d = dataSubset.map(Number).sort(d3.ascending);
+    var n = d.length;
 
-    var whiskerIndices = iqr(1.5)(dataSubset, 0);
+    d['quartiles'] = quartiles(d);
+
+    var whiskerIndices = iqr(1.5)(d, 0);
 
     var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
+
     var fullOutlierIndices = outlierIndices.slice();
-    outlierIndices = validOutliers(dataSubset, outlierIndices);
+    outlierIndices = validOutliers(sorted, dataSubsetUnsorted, outlierIndices);
 
-    removeInvalidOutlier(dataSubset, fullOutlierIndices, outlierIndices);
+    removeInvalidOutlier(sorted, fullOutlierIndices, outlierIndices);
 
+    //plotting all points and valid outliers
     x = createDomain(dataSubset);
 
     xAxis = d3.svg.axis()

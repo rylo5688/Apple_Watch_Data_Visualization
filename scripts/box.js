@@ -24,18 +24,19 @@ d3.box = function() {
   function box(g) {
     g.each(function(d, i) {
       //We need our own sort so we can put the data in ascending order while changing the matching indexes of the time array
+      var unsortedCopy = d.slice();
       quicksort(d, 0, d.length-1);
-      var sortedCopy = d;
+      var sortedCopy = d.slice();
 
       d = d.map(value).sort(d3.ascending);
-      var g = d3.select(this),
-          n = d.length;
+      var g = d3.select(this);
+      var n = d.length;
 
       // Compute quartiles. Must return exactly 3 elements.
       var quartileData = d['quartiles'] = quartiles(d);
 
       //Getting the index of the minimum and maximum values from the data for the box plots (whisker ends that are calculated with iqr(1.5))
-      var whiskerIndices = whiskers.call(this, d, i);
+      var whiskerIndices = iqr(1.5)(d, i);
 
       //Mapping the indexes of the minimum and maximum to the data
       var whiskerData = whiskerIndices.map(function(i) { return d[i]; });
@@ -43,7 +44,7 @@ d3.box = function() {
       //All data outside of the whiskers are outliers
       var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
 
-      outlierIndices = validOutliers(sortedCopy, outlierIndices);
+      outlierIndices = validOutliers(sortedCopy, unsortedCopy, outlierIndices);
 
       //y-axis scale
       var y0 = d3.scale.linear()

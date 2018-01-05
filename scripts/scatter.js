@@ -16,8 +16,6 @@ d3.scatter = function() {
     g.each(function(d, i) {
         var time = d['time'];
 
-
-
         //y scale
         var y0 = d3.scale.linear()
             .domain([0, 200])
