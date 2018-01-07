@@ -42,9 +42,9 @@ d3.box = function() {
       var whiskerData = whiskerIndices.map(function(i) { return d[i]; });
 
       //All data outside of the whiskers are outliers
-      var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
+      var outlierIndices = getOutliers(unsortedCopy, d[whiskerIndices[0]], d[whiskerIndices[1]]);
 
-      outlierIndices = validOutliers(sortedCopy, unsortedCopy, outlierIndices);
+      outlierIndices = validOutliers(unsortedCopy, outlierIndices);
 
       //y-axis scale
       var y0 = d3.scale.linear()
@@ -124,7 +124,7 @@ d3.box = function() {
           .attr("class", "outlier")
           .attr("r", 3)
           .attr("cx", width / 2)
-          .attr("cy", function(i) { return y0(d[i]); })
+          .attr("cy", function(i) { return y0(unsortedCopy[i]); })
           .style("fill", function (i){ return "#000000"; })
           .style("opacity", 0)
         .transition()

@@ -1,13 +1,12 @@
 // Returns a function to compute the interquartile range. (k should be 1.5)
 function iqr(k) {
   return function(d, i) {
-    console.log(d);
     var q1 = d['quartiles'][0],
     q3 = d['quartiles'][2],
     iqr = (q3 - q1) * k,
     i = -1,
     j = d.length;
-    while (d[++i] < q1 - iqr){};
+    while (d[++i] < q1 - iqr);
     while (d[--j] > q3 + iqr);
 
     if (i == d.length && j == -1){ //whiskers are the min/max of the data
@@ -17,104 +16,225 @@ function iqr(k) {
   };
 }
 
-function validOutliers(d, dUnsorted, indices){
-  var index1, index2, index3, min1, min2, min3;
+function getOutliers(d, lower, upper){
+  var indices = [];
+  for (var i = 0; i < d.length; i++){
+    if (d[i] < lower){
+      indices.push(i);
+    }
+    if (d[i] > upper){
+      indices.push(i);
+    }
+  }
+
+  return indices;
+}
+
+function validOutliers(d, indices){
+  var index1, index2, index3, index4, index5, time1, time2, time3, time4, time5, sec1, sec2, sec3, sec4, sec5;
+  var size = indices.length;
 
   var valid = [];
 
   //edge cases
-  if (indices.length == 1) {
+  if (size == 1){
+    index3 = indices[0]
+    if (d[index3] > 100){
+      if (!falsePositive(d, index3)){
+        valid.push(index3);
+      }
+    }
     return valid;
   }
-  else if(indices.length == 2){
-    index1 = indices[0];
-    index2 = indices[1];
+  else if (size == 2){
+    index2 = indices[1]
+    index3 = indices[0];
 
-    time1 = d[index1]['time'];
     time2 = d[index2]['time'];
+    time3 = d[index3]['time'];
 
-    min1 = time1[1];
-    min2 = time2[1];
+    sec2 = time2[0]*3600 + time2[1]*60 + time2[2];
+    sec3 = time3[0]*3600 + time3[1]*60 + time3[2];
 
-    //rule 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
-    if (time1[0] == time2[0]){
-      if (Math.abs(d[index1] - d[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
-        valid.push(index1);
+    //RULE 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
+    //case 1: index2-index3
+    if (Math.abs(d[index2] - d[index3]) <= 1 && Math.abs(sec2 - sec3) <= 60){ //check that the times are within 1 minute
+      valid.push(index2);
+      valid.push(index3);
+      return valid;
+    }
+
+    //RULE 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
+    if (d[index2] > 100){
+      if (!falsePositive(d, index2)){
         valid.push(index2);
       }
     }
-
+    if (d[index3] > 100){
+      if (!falsePositive(d, index3)){
+        valid.push(index3);
+      }
+    }
     return valid;
   }
+  else if (size == 3){
+    index1 = indices[2];
+    index2 = indices[1]
+    index3 = indices[0];
 
-  var edgeCase = false;
-  for (var i = 0; i < indices.length; i++){
-    edgeCase = false;
-    if (i == 0){ //edge case
-      edgeCase = true;
-      index1 = indices[i+1];
-      index2 = indices[i];
-      index3 = indices[i+2];
-    }
-    else if (i == indices.length-1){ //edge case
-      edgeCase = true;
-      index1 = indices[i-1];
-      index2 = indices[i];
-      index3 = indices[i-2];
-    }
-    else {
-      index1 = indices[i-1];
-      index2 = indices[i];
-      index3 = indices[i+1];
-    }
-
-    //variables used to test if certain rules hold
     time1 = d[index1]['time'];
     time2 = d[index2]['time'];
     time3 = d[index3]['time'];
 
-    min1 = time1[1];
-    min2 = time2[1];
-    min3 = time3[1];
+    sec1 = time1[0]*3600 + time1[1]*60 + time1[2];
+    sec2 = time2[0]*3600 + time2[1]*60 + time2[2];
+    sec3 = time3[0]*3600 + time3[1]*60 + time3[2];
 
-    //rule 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
+    //RULE 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
     //Then they are considered valid
+    //case 1: index1-index3
     if (Math.abs(d[index1] - d[index2]) <= 5 && Math.abs(d[index2] - d[index3]) <= 5 && Math.abs(d[index3] - d[index1]) <= 5){
-      if (time1[0] == time2[0] && time2[0] == time3[0]){ //checking for matching hours
-        if (Math.abs(min1 - min2) <= 2 && Math.abs(min2 - min3) <= 2 && Math.abs(min3 - min1) <=2){
-          if (falsePositive(d, dUnsorted, index2)){
-            continue;
-          }
-          else{
-            valid.push(index2);
-            continue;
-          }
-        }
+      if (Math.abs(sec1 - sec2) <= 120 && Math.abs(sec2 - sec3) <= 120 && Math.abs(sec3 - sec1) <= 120){ //check that the times are within 2 minutes
+        valid.push(index1);
+        valid.push(index2);
+        valid.push(index3);
+        return valid;
       }
     }
 
-    //rule 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
-    if (time1[0] == time2[0]){ //checking for matching hours
-      if (Math.abs(d[index1] - d[index2]) <= 1 && Math.abs(min1 - min2) <= 1){
-        if (falsePositive(d, dUnsorted, index2)){
-          continue;
-        }
-        else{
-          valid.push(index2);
-          continue;
-        }
+    //RULE 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
+    //case 1: index2-index3
+    if (Math.abs(d[index2] - d[index3]) <= 1 && Math.abs(sec2 - sec3) <= 60){ //check that the times are within 1 minute
+      valid.push(index2);
+      valid.push(index3);
+
+      if (Math.abs(d[index1] - d[index2]) <= 1 && Math.abs(sec1 - sec2) <= 60){
+        valid.push(index1);
+      }
+      return valid;
+    }
+    else if (Math.abs(d[index1] - d[index2]) <= 1 && Math.abs(sec1 - sec2) <= 60){
+      valid.push(index1);
+      valid.push(index2);
+      return valid;
+    }
+
+    //RULE 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
+    if (d[index1] > 100){
+      if (!falsePositive(d, index1)){
+        valid.push(index1);
+      }
+    }
+    if (d[index2] > 100){
+      if (!falsePositive(d, index2)){
+        valid.push(index2);
+      }
+    }
+    if (d[index3] > 100){
+      if (!falsePositive(d, index3)){
+        valid.push(index3);
+      }
+    }
+    return valid;
+  }
+
+  //size >= 3
+  for (var i = 0; i < size; i++){
+    if (i == 0){ //edge case
+      index1 = indices[i+2];
+      index2 = indices[i+1]
+      index3 = indices[i];
+      index4 = index1; //due to edge case
+      index5 = index2; //due to edge case
+    }
+    else if (i == 1){ //edge case
+      index1 = indices[i+2];
+      index2 = indices[i+1]
+      index3 = indices[i];
+      index4 = indices[i-1];
+      index5 = index2; //due to edge case
+    }
+    else if (i == size-2){ //edge case
+      index1 = indices[i-2];
+      index2 = indices[i-1]
+      index3 = indices[i];
+      index4 = indices[i+1];
+      index5 = index2; //due to edge case
+    }
+    else if (i == size-1){ //edge case
+      index1 = indices[i-2];
+      index2 = indices[i-1]
+      index3 = indices[i];
+      index4 = index1; //due to edge case
+      index5 = index2; //due to edge case
+    }
+    else { //normal cases
+      index1 = indices[i-2];
+      index2 = indices[i-1]
+      index3 = indices[i];
+      index4 = indices[i+1];
+      index5 = indices[i+2];
+    }
+
+    //variables used to test if certain rules hold
+
+    time1 = d[index1]['time'];
+    time2 = d[index2]['time'];
+    time3 = d[index3]['time'];
+    time4 = d[index4]['time'];
+    time5 = d[index5]['time'];
+
+    sec1 = time1[0]*3600 + time1[1]*60 + time1[2];
+    sec2 = time2[0]*3600 + time2[1]*60 + time2[2];
+    sec3 = time3[0]*3600 + time3[1]*60 + time3[2];
+    sec4 = time4[0]*3600 + time4[1]*60 + time4[2];
+    sec5 = time5[0]*3600 + time5[1]*60 + time5[2];
+
+    //RULE 1 - If the outliers included 3 readings they were less than 5 beats apart and measured within 2 minutes
+    //Then they are considered valid
+    //case 1: index1-index3
+    if (Math.abs(d[index1] - d[index2]) <= 5 && Math.abs(d[index2] - d[index3]) <= 5 && Math.abs(d[index3] - d[index1]) <= 5){
+      if (Math.abs(sec1 - sec2) <= 120 && Math.abs(sec2 - sec3) <= 120 && Math.abs(sec3 - sec1) <= 120){ //check that the times are within 2 minutes
+        valid.push(index3);
+        continue;
+      }
+    }
+    //case 2: index2-index4
+    if (Math.abs(d[index2] - d[index3]) <= 5 && Math.abs(d[index3] - d[index4]) <= 5 && Math.abs(d[index4] - d[index2]) <= 5){
+      if (Math.abs(sec2 - sec3) <= 120 && Math.abs(sec3 - sec4) <= 120 && Math.abs(sec4 - sec2) <= 120){ //check that the times are within 2 minutes
+        valid.push(index3);
+        continue;
+      }
+    }
+    //case 3: index3-index5
+    if (Math.abs(d[index3] - d[index4]) <= 5 && Math.abs(d[index4] - d[index5]) <= 5 && Math.abs(d[index5] - d[index3]) <= 5){
+      if (Math.abs(sec3 - sec4) <= 120 && Math.abs(sec4 - sec5) <= 120 && Math.abs(sec5 - sec3) <= 120){ //check that the times are within 2 minutes
+        valid.push(index3);
+        continue;
       }
     }
 
-    if (time2[0] == time3[0]){
-      if (Math.abs(d[index2] - d[index3]) <= 1 && Math.abs(min2 - min3) <= 1){
-        if (falsePositive(d, dUnsorted, index2)){
-          continue;
-        }
-        else{
-          valid.push(index2);
-          continue;
-        }
+    //RULE 2 - If there are 2 readings that are exactly the same or one beat apart, within 1 minute , then it’s considered a valid reading.
+    //case 1: index2-index3
+    if (Math.abs(d[index2] - d[index3]) <= 1 && Math.abs(sec2 - sec3) <= 60){ //check that the times are within 1 minute
+      valid.push(index3);
+      continue;
+    }
+    //case 2: index3-index4
+    if (i != 0 && i != size-1){ //some edge cases will not work
+      if (Math.abs(d[index3] - d[index4]) <= 1 && Math.abs(sec3 - sec4) <= 60){
+        valid.push(index3);
+        continue;
+      }
+    }
+
+    //RULE 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
+    if (d[index3] > 100){
+      if (falsePositive(d, index3)){
+        continue; //reading is a false positive, do not
+      }
+      else {
+        valid.push(index3);
       }
     }
   }
@@ -122,36 +242,25 @@ function validOutliers(d, dUnsorted, indices){
   return valid;
 }
 
-//rule 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
-function falsePositive(d, dUnsorted, index){
-  var date = d[index]['dateStr'];
-  var hour = d[index]['time'][0];
-  var min = d[index]['time'][1];
-  var sec = d[index]['time'][2];
+//RULE 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before it, within one minute, is considered false positive
+function falsePositive(d, index){
+  var sec = d[index]['time'][2]*3600 + d[index]['time'][1]*60 + d[index]['time'][2];
+  var secCurrent;
 
-  //finding the index in the dUnsorted (which is sorted by time instead of bpm)
-  for (var i = 0; i < dUnsorted.length; i++){
-    if (dUnsorted[i]['dateStr'] == date){ //macthing date
-      if (dUnsorted[i]['time'][0] == hour && dUnsorted[i]['time'][1] == min && dUnsorted[i]['time'][2] == sec){
-        index = i;
+  //checking 1 minute before
+  for (var i = index-1; i >= 0; i--){
+    secCurrent = d[i]['time'][2]*3600 + d[i]['time'][1]*60 + d[i]['time'][2];
+    if (Math.abs(sec - secCurrent) <= 60){
+      if (Math.abs(d[index] - d[i]) > 15){
+        return true; //reading is false positive
       }
+    }
+    else{
+      break;
     }
   }
 
-  var before = (index-1 == -1) ? 0 : index-1;
-  var after = (index+1 == dUnsorted.length) ? dUnsorted.length-1 : index+1;
-
-  if (dUnsorted[index] >= 100){
-    if (Math.abs(dUnsorted[index] - dUnsorted[before]) >= 15 && Math.abs(dUnsorted[index] - dUnsorted[after]) >= 15){
-      if (dUnsorted[before]['time'][0] == dUnsorted[index]['time'][0] && dUnsorted[index]['time'][0] == dUnsorted[after]['time'][0]){ //checking for matching hours
-        if (Math.abs(dUnsorted[index]['time'][1] - dUnsorted[before]['time'][1]) <= 1 && Math.abs(dUnsorted[index]['time'][1] - dUnsorted[after]['time'][1]) <= 1 && Math.abs(dUnsorted[before]['time'][1] - dUnsorted[after]['time'][1]) <=1 ){ //checking if it is within 1 minute
-          return true; //is a false positive
-        }
-      }
-    }
-  }
-
-  return false; //not a false positive
+  return false;
 }
 
 function removeInvalidOutlier(d, outlierArr, validArr){

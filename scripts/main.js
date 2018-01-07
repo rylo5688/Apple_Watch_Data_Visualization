@@ -10,6 +10,13 @@ var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'S
 var TIME = ['1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
 '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm']
 
+var maxBPM = 100;
+var minBPM = 60;
+var firstName = "Jane";
+var lastName = "";
+var age = 39; //48 39
+var fitnessLevel = "Lightly Active";
+
 var data = [];
 var currentData;
 var currentType;
@@ -25,13 +32,6 @@ max = -Infinity;
 
 var domainType = 0; //0 = year, 1 = month, 2 = week, 3 = day
 var domainTitle = ['Month', 'Day', 'Day', 'Time'];
-
-var maxBPM = 100;
-var minBPM = 60;
-var firstName = "Jane";
-var lastName = "";
-var age = 39; //48 39
-var fitnessLevel = "Lightly Active";
 
 var chart = d3.box()
   .whiskers(iqr(1.5))
@@ -100,10 +100,10 @@ function getWeekRange(date){
   var index = dateObj.getDay();
 
   var rangeArr = new Array(7); //0 = Sunday, ... , 6 = Saturday
-  rangeArr[index] = date;
 
   var dateStr;
   dateObj.setDate(dateObj.getDate()-index);
+
   for (var i = 0; i < index; i++){
     dateStr = (dateObj.getMonth()+1) + "/" + dateObj.getDate() + "/" + dateObj.getFullYear();
     rangeArr[i] = dateStr;
@@ -111,6 +111,7 @@ function getWeekRange(date){
     dateObj.setDate(dateObj.getDate()+1);
   }
 
+  rangeArr[index] = (dateObj.getMonth()+1) + "/" + dateObj.getDate() + "/" + dateObj.getFullYear();
   dateObj.setDate(dateObj.getDate()+1);
 
   for (var i = index+1; i < 7; i++){
@@ -540,10 +541,10 @@ function createPlot(dataSubset, type, title){
 
     var whiskerIndices = iqr(1.5)(d, 0);
 
-    var outlierIndices = d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n));
+    var outlierIndices = getOutliers(dataSubsetUnsorted, d[whiskerIndices[0]], d[whiskerIndices[1]]);
 
     var fullOutlierIndices = outlierIndices.slice();
-    outlierIndices = validOutliers(sorted, dataSubsetUnsorted, outlierIndices);
+    outlierIndices = validOutliers(dataSubsetUnsorted, outlierIndices);
 
     removeInvalidOutlier(sorted, fullOutlierIndices, outlierIndices);
 
