@@ -38,7 +38,7 @@ function validOutliers(d, indices){
 
   //edge cases
   if (size == 1){
-    index3 = indices[0]
+    index3 = indices[0];
     if (d[index3] > 100){
       if (!falsePositive(d, index3)){
         valid.push(index3);
@@ -230,10 +230,7 @@ function validOutliers(d, indices){
 
     //RULE 3 - Any reading higher than 100, and that has more than 15 beats difference with the readings before and after it, within one minute, is considered false positive
     if (d[index3] > 100){
-      if (falsePositive(d, index3)){
-        continue; //reading is a false positive, do not
-      }
-      else {
+      if (!falsePositive(d, index3)){
         valid.push(index3);
       }
     }

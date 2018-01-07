@@ -117,8 +117,6 @@ table td {
   font-weight: bold;
   cursor: pointer;
   outline: none;
-
-
 }
 
 .sideMenu{
@@ -167,8 +165,8 @@ table td {
   position: absolute;
   top: 15px;
   right: 15px;
-  height: 20px;
-  width: 20px;
+  height: 23px;
+  width: 23px;
   cursor: pointer;
 }
 

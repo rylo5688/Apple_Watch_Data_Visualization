@@ -12,9 +12,9 @@ var TIME = ['1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am
 
 var maxBPM = 100;
 var minBPM = 60;
-var firstName = "Jane";
+var firstName = "Joe";
 var lastName = "";
-var age = 39; //48 39
+var age = 48; //48 39
 var fitnessLevel = "Lightly Active";
 
 var data = [];
@@ -212,8 +212,19 @@ function updateBPMRange(dataSubset, type, title){
         .attr("y2", y(maxBPM))
       .append("svg:title")
         .text("Maximum healthy HR");
+
+      var minBPMLine = type == 'b' ? d3.select(".box").select("g") : d3.select(".scatter").select("g");
+        minBPMLine.append("line")
+          .attr("class", "minBPMLine")
+          .style("stroke", "blue")
+          .attr("x1", 0)
+          .attr("y1", y(minBPM))
+          .attr("x2", width)
+          .attr("y2", y(minBPM))
+        .append("svg:title")
+          .text("Minimum healthy HR range");
   }
-  else { //active max
+  else if (d3.select("#activeFilter").property("checked") == true){ //active max
     var maxActiveBPM = 208-.7*age;
     maxBPMLine.append("line")
       .attr("class", "maxBPMLine")
@@ -238,18 +249,17 @@ function updateBPMRange(dataSubset, type, title){
     .append("svg:title")
       .text("Moderate activity HR range");
 
+    var minBPMLine = type == 'b' ? d3.select(".box").select("g") : d3.select(".scatter").select("g");
+      minBPMLine.append("line")
+        .attr("class", "minBPMLine")
+        .style("stroke", "blue")
+        .attr("x1", 0)
+        .attr("y1", y(minBPM))
+        .attr("x2", width)
+        .attr("y2", y(minBPM))
+      .append("svg:title")
+        .text("Minimum healthy HR range");
   }
-
-  var minBPMLine = type == 'b' ? d3.select(".box").select("g") : d3.select(".scatter").select("g");
-    minBPMLine.append("line")
-      .attr("class", "minBPMLine")
-      .style("stroke", "blue")
-      .attr("x1", 0)
-      .attr("y1", y(minBPM))
-      .attr("x2", width)
-      .attr("y2", y(minBPM))
-    .append("svg:title")
-      .text("Minimum healthy HR range");
 }
 
 function createPlot(dataSubset, type, title){
@@ -359,8 +369,8 @@ function createPlot(dataSubset, type, title){
           setScope("m", dateStr);
           break;
         case 2:
-          if (dateArr[1]-7 <= 0){ //going back a month
-            var offset = 7-dateArr[1];
+          if (dateArr[2]-7 <= 0){ //going back a month
+            var offset = 7-dateArr[2];
             if (dateArr[1]-1 == 0){ //going back a month from January
               dateStr = "12/" + (MONTHDAYS[11]-offset) + "/" + (dateArr[0]-1);
             }
@@ -379,7 +389,8 @@ function createPlot(dataSubset, type, title){
               dateStr = "12/31/" + (dateArr[0]-1);
             }
             else {
-              dateStr = (dateArr[1]-1) + "/" + (MONTHDAYS[dateArr[1]-1]) + "/" + dateArr[0];
+              dateStr = (dateArr[1]-1) + "/" + (MONTHDAYS[dateArr[1]-2]) + "/" + dateArr[0];
+              console.log(dateStr);
             }
           }
           else {
@@ -414,8 +425,8 @@ function createPlot(dataSubset, type, title){
           setScope("m", dateStr);
           break;
         case 2:
-          if (dateArr[1]+7 > MONTHDAYS[dateArr[1]-1]){ //going forward a month
-            var offset = 7-(MONTHDAYS[dateArr[1]-1] - dateArr[1]);
+          if (dateArr[2]+7 > MONTHDAYS[dateArr[1]-1]){ //going forward a month
+            var offset = 7-(MONTHDAYS[dateArr[1]-1] - dateArr[2]);
             if (dateArr[1]+1 == 13){ //going back a forward from December
               dateStr = "1/" + offset + "/" + (dateArr[0]-1);
             }
@@ -429,7 +440,7 @@ function createPlot(dataSubset, type, title){
           setScope("w", dateStr);
           break;
         case 3:
-          if (dateArr[1]+1 > MONTHDAYS[dateArr[1]-1]){ //going forward a month
+          if (dateArr[2]+1 > MONTHDAYS[dateArr[1]-1]){ //going forward a month
             if (dateArr[1]+1 == 13){ //going forward a month from December
               dateStr = "1/1/" + (dateArr[0]+1);
             }
@@ -491,32 +502,8 @@ function createPlot(dataSubset, type, title){
       .style("font-size", "16px")
       .text(domainTitle[domainType]);
 
-  //draw grid lines
-  svg.append("line")
-      .attr("class", "grid")
-      .style("stroke", "black")
-      .style("opacity", 1)
-      .attr("x1", 0)
-      .attr("y1", y(200))
-      .attr("x2", width)
-      .attr("y2", y(200))
-
-
-  for (i = 180; i > 0; i-=20){
-    svg.append("line")
-      .attr("class", "grid")
-      .style("stroke", "black")
-      .style("opacity", .05)
-      .attr("x1", 0)
-      .attr("y1", y(i))
-      .attr("x2", width)
-      .attr("y2", y(i));
-  }
-
   //Creating the plots
   if (type == 'b'){ //box plots
-    // chart.dataTime(dataTime);
-
     svg.selectAll(".box")
         .data(dataSubset)
       .enter().append("g")
@@ -603,6 +590,28 @@ function createPlot(dataSubset, type, title){
         .attr("transform", function(d) { return "translate(" +  offset  + "," + 0 + ")"; } )
           .call(chartScatter.width(x.rangeBand()));
     });
+  }
+
+  //top horizontal grid line
+  svg.append("line")
+      .attr("class", "grid")
+      .style("stroke", "black")
+      .style("opacity", 1)
+      .attr("x1", 0)
+      .attr("y1", y(200))
+      .attr("x2", width)
+      .attr("y2", y(200))
+
+  //horizontal grid lines
+  for (i = 180; i > 0; i-=20){
+    svg.append("line")
+      .attr("class", "grid")
+      .style("stroke", "black")
+      .style("opacity", .05)
+      .attr("x1", 0)
+      .attr("y1", y(i))
+      .attr("x2", width)
+      .attr("y2", y(i));
   }
 }
 

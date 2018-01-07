@@ -1,7 +1,3 @@
-//https://bl.ocks.org/mbostock/4061502 used as a base
-//ISSUE: Boxes calculated before outliers (so outliers contained)
-//therefore some of the whiskers are incorrect
-
 (function() {
 
 d3.box = function() {
